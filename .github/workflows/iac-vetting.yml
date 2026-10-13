@@ -66,11 +66,11 @@ env:
   ZIZMOR_VERSION: "1.30.1"
   # Schemas the rendered chart is validated against.
   KUBERNETES_SCHEMA_VERSION: "1.31.0"
-  # Ratchets, not targets: "framework:floor" pairs. The chart scores 77.5 on
+  # Ratchets, not targets: "framework:floor" pairs. The chart scores 92.5 on
   # NSA and 100 on MITRE today; the gate fails if a change takes any
   # environment's render below a floor. Raise them as the open findings
   # close, never lower one to get a change through.
-  KUBESCAPE_FLOORS: "nsa:75 mitre:100"
+  KUBESCAPE_FLOORS: "nsa:90 mitre:100"
   BLOCKING: ${{ vars.IAC_VETTING_BLOCKING == 'true' }}
 
 jobs:
