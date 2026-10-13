@@ -79,6 +79,14 @@ context, probes, and policy are real; the application is not. A small real
 service that actually opens a database connection would make the smoke test
 mean more.
 
+The same gap shows in the promotion workflow. No image is built, so
+`apply.yml` deploys the pinned stand-in tag from the environment root, not
+a tag derived from the commit, to a kind cluster the job creates and
+discards. With no encrypted secret file and no age key configured, it uses
+a throwaway database password and says so in the run. The ordering, the
+smoke test and the environment gates are exercised; a build, a real secret
+and a cluster that outlives the job are not.
+
 ## 10. Smaller things
 
 - `Makefile` sleeps five seconds after starting Postgres instead of waiting
@@ -145,6 +153,39 @@ them to the logs; repositories pinned by SHA were unaffected
   invariants with no mechanical test. Promoting that list from a report to a
   failure is the change that closes the class rather than this instance, and
   it is one line.
+
+## 12. IaC vetting reports more than it blocks
+
+`iac-vetting.yml` blocks on formatting, validation, schema errors,
+actionlint and the Kubescape floors. Everything else it finds is report-only
+until the repository variable `IAC_VETTING_BLOCKING` is set, because the
+scanners still return:
+
+- **Checkov, 12 failed checks on the chart.** It was 26 until the Helm test
+  pod was hardened. What is left: the default namespace, an artifact of
+  Checkov rendering the chart with no release namespace; tag rather than
+  digest (`findings/0017`) and the pull policy on both pods; and on the
+  Deployment the service account token (`0015`) and the password as an
+  environment variable.
+- **zizmor, 32 findings in the four older workflows.** Unpinned actions
+  (item 11, `0003`), input interpolated into shell (`0022`), broad
+  permissions and inherited secrets (`0014`). None in `iac-vetting.yml`.
+- **tflint, 3 warnings.** `terraform/modules/app` declares no
+  `required_version` and no `required_providers`.
+- **Kubescape, 92.5 on NSA and 100 on MITRE** for every environment. The
+  floors are 90 and 100: they stop a regression, they do not certify the
+  chart.
+
+Two limits of the workflow itself:
+
+- Checkov has one applicable check for this Terraform and none for these
+  Ansible roles. The Kubernetes and Helm providers are thinly covered, so
+  the Rego plan policy in `pr-checks.yml` is still the real Terraform gate.
+- `pr-checks.yml` still runs its own, older Checkov on Terraform only. The
+  two overlap until that job is retired.
+
+The fix is the findings, not the switch: close them, raise the floors, then
+set `IAC_VETTING_BLOCKING`.
 
 ## What is deliberately not on this list
 

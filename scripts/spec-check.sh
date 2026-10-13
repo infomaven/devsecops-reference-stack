@@ -161,7 +161,8 @@ echo "invariants:"
 # Local reusable workflows (uses: ./...) sit in this repo at this commit and
 # need no pin. security-scan.yml is the toolkit's and is excluded by C5.
 AUTHORED_WORKFLOWS=".github/workflows/apply.yml .github/workflows/pr-checks.yml
-                    .github/workflows/promote.yml .github/workflows/scheduled-drift.yml"
+                    .github/workflows/promote.yml .github/workflows/scheduled-drift.yml
+                    .github/workflows/iac-vetting.yml"
 # shellcheck disable=SC2086
 i10_external=$(grep -hoE 'uses: +[^ ]+' $AUTHORED_WORKFLOWS 2>/dev/null \
   | grep -vE 'uses: +\./' | grep -c . || true)
@@ -190,6 +191,15 @@ done
 if [ -n "$untested" ]; then
   echo "  no mechanical test:$untested"
 fi
+
+check F25 1 "tflint warnings, Checkov and zizmor are report-only (REVIEW_NOTES 12)" \
+  'has .github/workflows/iac-vetting.yml' \
+  'grepq "terraform fmt -check" .github/workflows/iac-vetting.yml' \
+  'grepq "kubeconform -strict" .github/workflows/iac-vetting.yml' \
+  'grepq "compliance-threshold" .github/workflows/iac-vetting.yml' \
+  'grepq "actionlint" .github/workflows/iac-vetting.yml' \
+  '[ "$(grep -c "sha256sum --check --strict" .github/workflows/iac-vetting.yml)" -ge 6 ]' \
+  '! grepq "secrets\." .github/workflows/iac-vetting.yml'
 
 echo
 if command -v yamllint >/dev/null 2>&1; then

@@ -1,0 +1,380 @@
+---
+# IaC vetting: every kind of infrastructure code in this repository, checked
+# without a cluster, a cloud account, or a secret.
+#
+#   terraform   fmt, validate on each environment root, tflint
+#   kubernetes  the chart rendered per environment, schema-validated, then
+#               scored against the NSA/CISA and MITRE ATT&CK frameworks
+#   workflows   actionlint, then zizmor on the workflows themselves
+#   checkov     Terraform, Helm, Ansible and GitHub Actions in one pass
+#
+# Built to the standard the vendored security-scan.yml sets, which the other
+# workflows this repository authors do not yet meet (docs/REVIEW_NOTES.md 11):
+#   * Every action is pinned to a full commit SHA.
+#   * Every binary is downloaded at a pinned version and checked against a
+#     SHA-256 recorded below. checkov and zizmor are pinned by version from
+#     PyPI, as the template does for Semgrep.
+#   * The workflow token is read-only. The one job that uploads to code
+#     scanning asks for exactly that permission.
+#   * No secret, no environment, no pull_request_target: a pull request from
+#     a fork runs every check here with nothing to steal.
+#
+# What blocks, and what reports:
+#   * Always blocking: terraform fmt and validate, tflint errors, schema
+#     validation, actionlint, and the Kubescape score floors below.
+#   * Report-only until the repository variable IAC_VETTING_BLOCKING is
+#     "true": tflint warnings, Checkov, zizmor. They re-find weaknesses that
+#     are already recorded and open in findings/ and docs/REVIEW_NOTES.md, so
+#     blocking on them today would only teach people to ignore a red check.
+#
+# SARIF from every scanner is kept as a workflow artifact, and goes to code
+# scanning when CODE_SCANNING_UPLOAD is "true" (the same switch the vendored
+# template uses).
+
+name: iac-vetting
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # Weekly: scanner rules change even when this repository does not.
+    - cron: "41 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: iac-vetting-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  TERRAFORM_VERSION: "1.9.8"
+  TERRAFORM_SHA256: "186e0145f5e5f2eb97cbd785bc78f21bae4ef15119349f6ad4fa535b83b10df8"
+  TFLINT_VERSION: "0.64.0"
+  TFLINT_SHA256: "cca9d13e2e1d7a2c627af60ff899a3c9b74212899416aeb96ec764d2ef954537"
+  HELM_VERSION: "3.16.2"
+  HELM_SHA256: "9318379b847e333460d33d291d4c088156299a26cd93d570a7f5d0c36e50b5bb"
+  KUBECONFORM_VERSION: "0.8.0"
+  KUBECONFORM_SHA256: "9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883"
+  KUBESCAPE_VERSION: "4.0.15"
+  KUBESCAPE_SHA256: "6c9fd51bcdcd1093d19383ef20e1c58c2bf83c9026073f8dcc786680ed2a0093"
+  ACTIONLINT_VERSION: "1.7.12"
+  ACTIONLINT_SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+  CHECKOV_VERSION: "3.3.29"
+  ZIZMOR_VERSION: "1.30.1"
+  # Schemas the rendered chart is validated against.
+  KUBERNETES_SCHEMA_VERSION: "1.31.0"
+  # Ratchets, not targets: "framework:floor" pairs. The chart scores 92.5 on
+  # NSA and 100 on MITRE today; the gate fails if a change takes any
+  # environment's render below a floor. Raise them as the open findings
+  # close, never lower one to get a change through.
+  KUBESCAPE_FLOORS: "nsa:90 mitre:100"
+  BLOCKING: ${{ vars.IAC_VETTING_BLOCKING == 'true' }}
+
+jobs:
+  terraform:
+    name: Terraform (fmt, validate, tflint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Terraform and tflint (pinned, checksum-verified)
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin" && cd "$RUNNER_TEMP"
+          curl -sSfL -o terraform.zip \
+            "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
+          echo "${TERRAFORM_SHA256}  terraform.zip" | sha256sum --check --strict
+          unzip -q -o terraform.zip terraform -d bin
+          curl -sSfL -o tflint.zip \
+            "https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VERSION}/tflint_linux_amd64.zip"
+          echo "${TFLINT_SHA256}  tflint.zip" | sha256sum --check --strict
+          unzip -q -o tflint.zip tflint -d bin
+          rm terraform.zip tflint.zip
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - name: terraform fmt
+        run: terraform fmt -check -recursive -diff terraform
+
+      # -backend=false: no state is read and no cluster is contacted, so this
+      # needs no credential. It proves each root is internally consistent.
+      - name: terraform validate, every environment root
+        run: |
+          for root in terraform/envs/*/; do
+            echo "::group::${root}"
+            terraform -chdir="$root" init -backend=false -input=false -no-color
+            terraform -chdir="$root" validate -no-color
+            echo "::endgroup::"
+          done
+
+      # Errors always fail. Warnings fail only when blocking is switched on.
+      - name: tflint
+        run: |
+          floor=(--minimum-failure-severity=error)
+          [ "$BLOCKING" = "true" ] && floor=()
+          tflint --chdir terraform --recursive "${floor[@]}"
+
+      - name: SARIF for code scanning
+        if: always()
+        run: tflint --chdir terraform --recursive --format sarif --force > tflint.sarif
+
+      - name: Summary
+        if: always()
+        run: |
+          n=$(jq '[.runs[].results[]] | length' tflint.sarif 2>/dev/null || echo "n/a")
+          mode=$([ "$BLOCKING" = "true" ] && echo "blocking" || echo "errors block, warnings report-only")
+          echo "### tflint: ${n} issue(s) (${mode})" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: sarif-tflint
+          path: tflint.sarif
+          if-no-files-found: ignore
+
+  kubernetes:
+    name: Kubernetes (render, schema, NSA and MITRE)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Helm, kubeconform and Kubescape (pinned, checksum-verified)
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin" && cd "$RUNNER_TEMP"
+          curl -sSfL -o helm.tar.gz "https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz"
+          echo "${HELM_SHA256}  helm.tar.gz" | sha256sum --check --strict
+          tar -xzf helm.tar.gz -C bin --strip-components=1 linux-amd64/helm
+          curl -sSfL -o kubeconform.tar.gz \
+            "https://github.com/yannh/kubeconform/releases/download/v${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
+          echo "${KUBECONFORM_SHA256}  kubeconform.tar.gz" | sha256sum --check --strict
+          tar -xzf kubeconform.tar.gz -C bin kubeconform
+          curl -sSfL -o kubescape.tar.gz \
+            "https://github.com/kubescape/kubescape/releases/download/v${KUBESCAPE_VERSION}/kubescape_${KUBESCAPE_VERSION}_linux_amd64.tar.gz"
+          echo "${KUBESCAPE_SHA256}  kubescape.tar.gz" | sha256sum --check --strict
+          tar -xzf kubescape.tar.gz -C bin kubescape
+          rm helm.tar.gz kubeconform.tar.gz kubescape.tar.gz
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      # What is vetted is what would be applied: the chart as each
+      # environment's values file renders it, not the templates.
+      - name: Render the chart for every environment
+        run: |
+          mkdir -p rendered
+          for values in helm/paymentsvc/values-*.yaml; do
+            env=$(basename "$values" .yaml); env=${env#values-}
+            helm template paymentsvc helm/paymentsvc -f "$values" > "rendered/${env}.yaml"
+          done
+          ls -l rendered
+
+      - name: Schema validation (kubeconform, strict)
+        run: |
+          kubeconform -strict -summary \
+            -kubernetes-version "$KUBERNETES_SCHEMA_VERSION" rendered/
+
+      - name: NSA/CISA and MITRE ATT&CK frameworks (Kubescape)
+        run: |
+          status=0
+          for manifest in rendered/*.yaml; do
+            env=$(basename "$manifest" .yaml)
+            # One framework per scan: scanned together, the threshold applies
+            # to the blended score and a strong framework hides a weak one.
+            for pair in $KUBESCAPE_FLOORS; do
+              framework=${pair%%:*}; floor=${pair##*:}
+              echo "::group::${env}: ${framework} (floor ${floor})"
+              kubescape scan framework "$framework" "$manifest" \
+                --compliance-threshold "$floor" \
+                --format json --output "kubescape-${env}-${framework}.json" || status=1
+              echo "::endgroup::"
+            done
+          done
+          exit "$status"
+
+      # prod is the render that matters for code scanning; every environment
+      # and framework is kept as JSON in the evidence artifact.
+      - name: SARIF for code scanning
+        if: always()
+        run: |
+          kubescape scan framework nsa,mitre rendered/prod.yaml \
+            --format sarif --output kubescape.sarif >/dev/null 2>&1 || true
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Kubescape (floors: ${KUBESCAPE_FLOORS})"
+            echo
+            echo "| Environment | Framework | Score |"
+            echo "|---|---|---|"
+            for report in kubescape-*.json; do
+              [ -e "$report" ] || continue
+              env=${report#kubescape-}; env=${env%-*}
+              jq -r --arg env "$env" \
+                '.summaryDetails.frameworks[]? | "| \($env) | \(.name) | \(.complianceScore) |"' "$report"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: sarif-kubescape
+          path: kubescape.sarif
+          if-no-files-found: ignore
+
+      # The rendered manifests and the per-environment framework reports: what
+      # was vetted, and what the verdict was, for this commit.
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: evidence-kubernetes
+          path: |
+            rendered/
+            kubescape-*.json
+          if-no-files-found: ignore
+
+  workflows:
+    name: Workflows (actionlint, zizmor)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install actionlint (pinned, checksum-verified)
+        run: |
+          curl -sSfL -o actionlint.tar.gz \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          echo "${ACTIONLINT_SHA256}  actionlint.tar.gz" | sha256sum --check --strict
+          tar -xzf actionlint.tar.gz actionlint
+          rm actionlint.tar.gz
+
+      - name: Install zizmor (pinned)
+        run: pipx install "zizmor==${ZIZMOR_VERSION}"
+
+      - name: actionlint
+        run: ./actionlint -color
+
+      # Offline: zizmor's online audits want a token, and this job has none
+      # worth giving it. Unpinned actions, template injection, credential
+      # persistence and over-broad permissions are all offline audits.
+      - name: zizmor
+        run: |
+          rc=0
+          zizmor --offline .github/workflows || rc=$?
+          [ "$BLOCKING" = "true" ] && exit "$rc"
+          exit 0
+
+      - name: SARIF for code scanning
+        if: always()
+        run: zizmor --offline --format sarif .github/workflows > zizmor.sarif || true
+
+      - name: Summary
+        if: always()
+        run: |
+          n=$(jq '[.runs[].results[]] | length' zizmor.sarif 2>/dev/null || echo "n/a")
+          mode=$([ "$BLOCKING" = "true" ] && echo "blocking" || echo "report-only")
+          echo "### zizmor: ${n} finding(s) (${mode})" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: sarif-zizmor
+          path: zizmor.sarif
+          if-no-files-found: ignore
+
+  checkov:
+    name: Checkov (Terraform, Helm, Ansible, Actions)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Checkov renders the chart itself, with the chart's default values.
+      - name: Install Helm (pinned, checksum-verified)
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin" && cd "$RUNNER_TEMP"
+          curl -sSfL -o helm.tar.gz "https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz"
+          echo "${HELM_SHA256}  helm.tar.gz" | sha256sum --check --strict
+          tar -xzf helm.tar.gz -C bin --strip-components=1 linux-amd64/helm
+          rm helm.tar.gz
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - name: Install Checkov (pinned)
+        run: pipx install "checkov==${CHECKOV_VERSION}"
+
+      - name: Checkov
+        run: |
+          soft=(--soft-fail)
+          [ "$BLOCKING" = "true" ] && soft=()
+          checkov --directory . \
+            --framework terraform helm ansible github_actions \
+            --compact --quiet "${soft[@]}" \
+            --output cli --output sarif \
+            --output-file-path console,checkov.sarif
+
+      - name: Summary
+        if: always()
+        run: |
+          n=$(jq '[.runs[].results[]] | length' checkov.sarif 2>/dev/null || echo "n/a")
+          mode=$([ "$BLOCKING" = "true" ] && echo "blocking" || echo "report-only")
+          echo "### Checkov: ${n} failed check(s) (${mode})" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: sarif-checkov
+          path: checkov.sarif
+          if-no-files-found: ignore
+
+  code-scanning:
+    name: Upload to GitHub code scanning
+    needs: [terraform, kubernetes, workflows, checkov]
+    if: always() && vars.CODE_SCANNING_UPLOAD == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: sarif-*
+          path: sarif
+
+      - name: Upload tflint results
+        if: hashFiles('sarif/sarif-tflint/tflint.sarif') != ''
+        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: sarif/sarif-tflint/tflint.sarif
+          category: tflint
+
+      - name: Upload Kubescape results
+        if: hashFiles('sarif/sarif-kubescape/kubescape.sarif') != ''
+        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: sarif/sarif-kubescape/kubescape.sarif
+          category: kubescape
+
+      - name: Upload zizmor results
+        if: hashFiles('sarif/sarif-zizmor/zizmor.sarif') != ''
+        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: sarif/sarif-zizmor/zizmor.sarif
+          category: zizmor
+
+      - name: Upload Checkov results
+        if: hashFiles('sarif/sarif-checkov/checkov.sarif') != ''
+        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: sarif/sarif-checkov/checkov.sarif
+          category: checkov

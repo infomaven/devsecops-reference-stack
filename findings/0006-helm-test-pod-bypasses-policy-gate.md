@@ -4,7 +4,7 @@
 - **Date:** 2026-10-12
 - **CWE:** CWE-693 (protection mechanism failure)
 - **Severity:** Medium. The policy gate covers one workload kind, so anything else ships unchecked. Locally it is also a likely demo failure.
-- **Status:** open (triage only; not yet fixed, prevented, or accepted)
+- **Status:** partly fixed 2026-10-13 (runtime consequences fixed; the policy-gate gap is open)
 
 ## What it is
 
@@ -34,7 +34,15 @@ match it.
 
 ## Resolution
 
-Not yet decided.
+Partly fixed, 2026-10-13. Both runtime consequences were confirmed and
+fixed: the namespace rejected the pod as written (`violates PodSecurity
+"restricted"`), so the test pod now carries the workload's security context,
+drops the selector labels, and has its own NetworkPolicy to DNS and the
+service port. `scripts/smoke-test.sh` passes for dev, staging and prod on a
+kind cluster.
+
+Still open: the Rego rules only look at `Deployment`, so the policy gate
+would let the same mistake through again.
 
 ## The guardrail, not just the fix
 

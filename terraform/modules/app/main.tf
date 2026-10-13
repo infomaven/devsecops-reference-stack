@@ -6,8 +6,8 @@ resource "kubernetes_namespace" "this" {
   metadata {
     name = var.namespace
     labels = merge(var.labels, {
-      "environment"                  = var.environment
-      "kubernetes.io/metadata.name"  = var.namespace
+      "environment"                        = var.environment
+      "kubernetes.io/metadata.name"        = var.namespace
       "pod-security.kubernetes.io/enforce" = "restricted"
     })
   }

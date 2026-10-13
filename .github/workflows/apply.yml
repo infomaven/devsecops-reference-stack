@@ -26,21 +26,52 @@ jobs:
         with:
           terraform_version: 1.9.8
 
+      # There is no shared cluster and no cloud account (SPEC C1), so each
+      # environment's job builds the cluster it deploys to and throws it away
+      # with the runner. The Terraform roots expect this cluster name.
+      - name: create the kind cluster
+        env:
+          KIND_VERSION: "0.33.0"
+          KIND_SHA256: "aee6151561422756b764a4ae28e7f44cda5af5a9eead3cc9985112b1de8d8e0d"
+        run: |
+          # Downloaded outside the workspace: the repository has a kind/
+          # directory, so a file named kind cannot be written at its root.
+          curl -sSfL -o "$RUNNER_TEMP/kind-bin" \
+            "https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-linux-amd64"
+          echo "${KIND_SHA256}  $RUNNER_TEMP/kind-bin" | sha256sum --check --strict
+          sudo install -m 0755 "$RUNNER_TEMP/kind-bin" /usr/local/bin/kind
+          kind create cluster --config kind/cluster.yaml --wait 180s
+          kubectl cluster-info --context kind-devsecops-demo
+
       - name: decrypt the environment secret
         env:
           SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+          SECRET_FILE: secrets/${{ inputs.environment }}.enc.yaml
         run: |
-          curl -sSL -o sops https://github.com/getsops/sops/releases/download/v3.9.1/sops-v3.9.1.linux.amd64
-          chmod +x sops && sudo mv sops /usr/local/bin/
+          # Until the encrypted file and its age key both exist (FEATURES F07
+          # is partial), there is nothing to decrypt. The cluster is disposable
+          # and nothing in it reads the password, so a throwaway value stands
+          # in, and says so. Once both exist, a failed decrypt fails the job.
+          if [ -z "$SOPS_AGE_KEY" ] || [ ! -f "$SECRET_FILE" ]; then
+            echo "::notice title=No SOPS secret configured::Using a throwaway database password for the disposable cluster."
+            password=$(openssl rand -hex 24)
+          else
+            curl -sSL -o sops https://github.com/getsops/sops/releases/download/v3.9.1/sops-v3.9.1.linux.amd64
+            chmod +x sops && sudo mv sops /usr/local/bin/
+            password=$(sops -d --extract '["db_password"]' "$SECRET_FILE")
+          fi
+          echo "::add-mask::${password}"
           # Written to the job environment, never to a file in the workspace.
-          echo "TF_VAR_db_password=$(sops -d --extract '["db_password"]' \
-            secrets/${{ inputs.environment }}.enc.yaml)" >> "$GITHUB_ENV"
+          echo "TF_VAR_db_password=${password}" >> "$GITHUB_ENV"
 
+      # No image is built here: the service is a stand-in (REVIEW_NOTES 9), so
+      # the pinned tag in the environment root is what deploys. A pipeline
+      # that builds one passes its digest with -var image_tag=...
       - name: terraform apply
         run: |
           terraform -chdir=terraform/envs/${{ inputs.environment }} init -input=false
           terraform -chdir=terraform/envs/${{ inputs.environment }} apply \
-            -input=false -auto-approve -var "image_tag=${GITHUB_SHA::12}"
+            -input=false -auto-approve
 
       - name: smoke test
         run: ./scripts/smoke-test.sh ${{ inputs.environment }}
