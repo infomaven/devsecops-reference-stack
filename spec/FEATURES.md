@@ -29,6 +29,7 @@ produces or modifies the feature. Status: done, partial, or planned.
 | F21 | Threat model and monitoring | STRIDE table with mitigations and stated weaknesses; monitoring doc with the three deploy questions and testing by layer | `docs/THREAT_MODEL.md`, `docs/MONITORING.md` | P10 | done |
 | F22 | Audit loop | EXERCISE.md loop, findings directory with template, `make exercise`, TWO_REPOS.md | `docs/EXERCISE.md`, `findings/*`, `docs/TWO_REPOS.md` | P11 | partial: no findings recorded yet |
 | F23 | Review notes | Known weaknesses in priority order with reasons | `docs/REVIEW_NOTES.md` | P12 | done |
+| F25 | IaC vetting | One workflow vets Terraform (fmt, validate on each root, tflint), the chart rendered per environment (kubeconform, Kubescape NSA and MITRE floors), the workflows (actionlint, zizmor), and all of them with Checkov; uses no secret and no environment; every action pinned by commit SHA and every binary checksum-verified (I10); SARIF kept per scanner | `.github/workflows/iac-vetting.yml` | MOD | partial: tflint warnings, Checkov and zizmor are report-only (REVIEW_NOTES 12); not yet run on GitHub |
 | F24 | Spec layer | SPEC, FEATURES, prompts, change protocol, conformance script, Claude Code commands | `spec/*`, `scripts/spec-check.sh`, `.claude/commands/*` | P00 | done |
 
 ## Planned changes, from REVIEW_NOTES
