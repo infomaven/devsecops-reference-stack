@@ -103,6 +103,10 @@ check F14 0 "" \
   'grepq "iac-security" .github/workflows/pr-checks.yml' \
   'grepq "conftest test --policy policy/terraform" .github/workflows/pr-checks.yml' \
   '! grepq "uses: .*@master" .github/workflows/pr-checks.yml'
+# The @master test above forbids one bad reference. It is NOT a test of I10,
+# which requires a commit SHA: it passes happily on @v4. I10 is tested on its
+# own below. See docs/REVIEW_NOTES.md 11 for why that distinction cost
+# something.
 
 check F15 1 "rollback leaves Terraform state stale (REVIEW_NOTES 5); OIDC declared but unused (7)" \
   'grepq "needs: dev" .github/workflows/promote.yml' 'grepq "needs: staging" .github/workflows/promote.yml' \
@@ -141,6 +145,51 @@ check F24 0 "" \
   'has spec/SPEC.md' 'has spec/FEATURES.md' 'has spec/CHANGE-PROTOCOL.md' \
   'has spec/prompts/00-spec-layer.md' 'has spec/prompts/MOD-template.md' \
   'has .claude/commands/spec-slice.md' 'has .claude/commands/spec-check.md'
+
+
+# ---------------------------------------------------------------------------
+# Invariants. SPEC.md states twelve; the ones that can be tested by a command
+# are tested here and marked with a `tested-invariant` line so the coverage
+# report at the bottom can see them. A feature with no test already fails this
+# script; an invariant with no test was silent until now.
+# ---------------------------------------------------------------------------
+echo
+echo "invariants:"
+
+# tested-invariant: I10
+# Every action in a workflow this repository authors is pinned by commit SHA.
+# Local reusable workflows (uses: ./...) sit in this repo at this commit and
+# need no pin. security-scan.yml is the toolkit's and is excluded by C5.
+AUTHORED_WORKFLOWS=".github/workflows/apply.yml .github/workflows/pr-checks.yml
+                    .github/workflows/promote.yml .github/workflows/scheduled-drift.yml"
+# shellcheck disable=SC2086
+i10_external=$(grep -hoE 'uses: +[^ ]+' $AUTHORED_WORKFLOWS 2>/dev/null \
+  | grep -vE 'uses: +\./' | grep -c . || true)
+# shellcheck disable=SC2086
+i10_unpinned=$(grep -hoE 'uses: +[^ ]+' $AUTHORED_WORKFLOWS 2>/dev/null \
+  | grep -vE 'uses: +\./' | grep -vc -E '@[0-9a-f]{40}$' || true)
+
+if [ "${i10_unpinned:-0}" -eq 0 ] && [ "${i10_external:-0}" -gt 0 ]; then
+  report PASS I10 "all $i10_external external action references pinned by commit SHA"
+elif [ "${i10_external:-0}" -eq 0 ]; then
+  report FAIL I10 "found no action references to check; did the workflow paths move?"
+else
+  report PARTIAL I10 \
+    "$i10_unpinned of $i10_external external action refs on mutable tags (REVIEW_NOTES 11)"
+  grep -nE 'uses: +[^ .]' $AUTHORED_WORKFLOWS 2>/dev/null \
+    | grep -vE '@[0-9a-f]{40}' | sed 's/^/             /'
+fi
+
+# Coverage: an invariant with no mechanical test is a comment. Reported rather
+# than failed for now; promoting this to a failure is the layer-one fix in
+# REVIEW_NOTES 11.
+untested=""
+for inv in $(grep -oE '^- I[0-9]{1,2}\.' spec/SPEC.md 2>/dev/null | tr -d '\-. '); do
+  grep -q "^# tested-invariant: $inv\$" "$0" || untested="$untested $inv"
+done
+if [ -n "$untested" ]; then
+  echo "  no mechanical test:$untested"
+fi
 
 echo
 if command -v yamllint >/dev/null 2>&1; then

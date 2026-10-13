@@ -20,3 +20,5 @@ docs/ELEVATOR_PITCH.md
 docs/INTERVIEW_NOTES.md
 docs/DEMO_SCRIPT.md
 interview_prep-*.md
+walkthrough.sh
+.DS_Store

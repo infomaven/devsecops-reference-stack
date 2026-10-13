@@ -26,8 +26,10 @@ repository directly, not by analogy. See `docs/EXERCISE.md`.
 template, copied unmodified: Gitleaks, Semgrep, Trivy, and a CycloneDX
 SBOM, with every action pinned by commit SHA and every scanner binary
 checksum-verified. This repository's own checks were trimmed so the two do
-not overlap, and its remaining actions were re-pinned to the same
-standard. Update it by re-copying from the toolkit, never by editing here.
+not overlap. Its remaining actions are mostly still on version tags rather
+than commit SHAs, which is the standard the template sets and this
+repository has not yet met: see `docs/REVIEW_NOTES.md` 11. Update the
+template by re-copying from the toolkit, never by editing here.
 
 **3. A closed finding loop.** Toolkit output lands in `findings/`, and
 every finding ends in one of three places: a fix, a Rego rule in

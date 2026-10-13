@@ -92,6 +92,60 @@ mean more.
 - `verify`-style checks exist for resume data in another project of mine and
   not here: this repo has lint and policy but no test of its own scripts.
 
+## 11. Invariant I10 is stated, mistested, and violated
+
+Found last, after the list was numbered. On severity it belongs around 4:
+CI holds the credentials that can tamper with an artifact after every gate
+has passed it.
+
+**The state.** Across the four workflows this repository authors, fourteen
+external action references: one pinned by commit SHA
+(`pr-checks.yml:50`), thirteen on `@v4` and `@v3`. Three further `uses:`
+lines point at local reusable workflows and correctly need no pin. The
+vendored `security-scan.yml` pins all eleven of its own.
+
+**Why it matters.** A tag is a mutable pointer. The action owner, or anyone
+who takes their account, can move it, and the moved tag produces no diff in
+this repository: nothing to review, nothing in `git log`. The action runs
+inside the job with its token, its OIDC identity and its filesystem. In
+March 2025 `tj-actions/changed-files` had existing version tags repointed at
+a commit that read secrets out of the runner's process memory and printed
+them to the logs; repositories pinned by SHA were unaffected
+(CVE-2025-30066).
+
+**It failed in three layers, and the middle one is the lesson.**
+
+1. *Stated.* `spec/SPEC.md` I10 says every action this repository authors is
+   pinned by commit SHA. `docs/TWO_REPOS.md` went further and claimed it was
+   already done; that sentence has been corrected to say what is true. The
+   comment at `pr-checks.yml:48` states the reasoning correctly, directly
+   above the one line that follows it.
+2. *Tested.* `spec-check.sh` F14 asserted `! grep "uses: .*@master"`, which
+   forbids `@master` and permits `@v4`. It ran, it passed, and it tested a
+   weaker condition than the invariant it appeared to cover. A check that
+   reports green on an adjacent condition is worse than no check: it
+   consumes the attention that would have found the gap. More broadly,
+   `spec-check.sh` mapped every feature ID to a test and no invariant to
+   anything at all.
+3. *Deployed.* Thirteen references drifted, which is the resting state: the
+   platform's own documentation examples use `@v4`, so every copy-paste
+   produces a violation. A control that fights the default needs
+   enforcement, not intention.
+
+**The fix, in increasing order of value.**
+
+- Pin the thirteen references. Dependabot updates SHA-pinned actions and keeps
+  the `# v4.2.1` comment current, so this does not freeze them.
+- Test the invariant rather than a proxy. `spec-check.sh` now counts
+  unpinned external references on every run and reports I10 as partial with
+  the live count, so the number falls as references are pinned and the line
+  turns green by itself at zero.
+- Make an untested invariant a reported gap, then a failing one.
+  `spec-check.sh` already failed on a feature ID with no test; it now lists
+  invariants with no mechanical test. Promoting that list from a report to a
+  failure is the change that closes the class rather than this instance, and
+  it is one line.
+
 ## What is deliberately not on this list
 
 Local state, a single kind cluster, and the demo password in the Makefile

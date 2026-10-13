@@ -6,7 +6,64 @@ Helm, a Postgres database managed by Ansible, secrets encrypted at rest with
 SOPS, and a CI/CD pipeline that promotes Terraform changes dev to staging to
 prod behind peer review, tests, and policy checks.
 
-## Audited with my own tooling
+
+## Concepts Covered
+
+| Area | Where to look |
+|---|---|
+| Kubernetes from scratch | `kind/cluster.yaml`, `docs/K8S_FROM_SCRATCH.md` |
+| Helm chart authoring | `helm/paymentsvc/` |
+| Terraform, three environments | `terraform/envs/`, `terraform/modules/app/` |
+| Ansible with Postgres | `ansible/`, `db/migrations/` |
+| Secrets management | `docs/SECRETS.md`, `.sops.yaml`, `scripts/` |
+| CI/CD with review gates | `.github/workflows/`, `.github/CODEOWNERS` |
+| Policy as code | `policy/` (Rego, run with conftest) |
+| Monitoring and success criteria | `docs/MONITORING.md` |
+| Decisions and tradeoffs | `docs/adr/` |
+| Threat model | `docs/THREAT_MODEL.md` |
+| Auditing the stack with my own toolkit | `docs/EXERCISE.md`, `findings/` |
+| How the two repositories fit together | `docs/TWO_REPOS.md` |
+| What I would fix next, and why | `docs/REVIEW_NOTES.md` |
+| The spec this repo answers to, and the prompts that rebuild it | `spec/` |
+
+Three files under `docs/` are gitignored because they are interview
+preparation rather than documentation: `ELEVATOR_PITCH.md`,
+`INTERVIEW_NOTES.md`, and `DEMO_SCRIPT.md`. They stay on the machine that
+wrote them.
+
+## Design Approach: Spec-driven
+
+The capabilities of this repo were created using a set of spec files that were created from a Product owner perspective and the following directive: This repo should provide a solid DevSecOps foundation for a pipeline that can vet applications early in the development process. 
+`spec/SPEC.md` states purpose, constraints, and invariants; 
+`spec/FEATURES.md`
+lists every feature with checkable acceptance criteria; 
+`spec/prompts/` is the numbered prompt sequence that recreates the repository slice by slice, plus a
+template for modifying one feature. 
+`make spec-check` tests the mechanical criteria. The spec was extracted from the code after the first build and leads from then on; 
+`spec/CHANGE-PROTOCOL.md` says how.
+
+## Software Requirements
+
+Docker, kind, kubectl, helm 3, terraform 1.6+, ansible-core 2.16+, sops, age,
+conftest, and `psycopg2-binary`. `scripts/bootstrap.sh` checks for each one
+and tells you what is missing.
+
+## How to Run it
+
+```bash
+./scripts/bootstrap.sh          # preflight checks
+make cluster                    # kind cluster + registry-less local images
+make db                         # Postgres container + Ansible roles + migrations
+make deploy ENV=dev             # terraform apply against the kind cluster
+make smoke ENV=dev              # post-deploy checks
+make policy                     # helm template | conftest test
+make destroy                    # tear everything down
+```
+
+Each `make` target prints the underlying command before running it, so a
+screenshare viewer can see exactly what is happening.
+
+## Bonus: Audited with my own tooling
 
 This stack is audited by a second repository of mine,
 `security-engineer-toolkit`: an open-source practice environment and working
@@ -64,57 +121,3 @@ database roles are newer to me: I have used Helm to install and upgrade
 existing charts and Argo CD to deploy through an existing GitOps setup, and
 this repo is where I wrote charts and playbooks of my own. Nothing here is
 client code.
-
-## What it shows
-
-| Area | Where to look |
-|---|---|
-| Kubernetes from scratch | `kind/cluster.yaml`, `docs/K8S_FROM_SCRATCH.md` |
-| Helm chart authoring | `helm/paymentsvc/` |
-| Terraform, three environments | `terraform/envs/`, `terraform/modules/app/` |
-| Ansible with Postgres | `ansible/`, `db/migrations/` |
-| Secrets management | `docs/SECRETS.md`, `.sops.yaml`, `scripts/` |
-| CI/CD with review gates | `.github/workflows/`, `.github/CODEOWNERS` |
-| Policy as code | `policy/` (Rego, run with conftest) |
-| Monitoring and success criteria | `docs/MONITORING.md` |
-| Decisions and tradeoffs | `docs/adr/` |
-| Threat model | `docs/THREAT_MODEL.md` |
-| Auditing the stack with my own toolkit | `docs/EXERCISE.md`, `findings/` |
-| How the two repositories fit together | `docs/TWO_REPOS.md` |
-| What I would fix next, and why | `docs/REVIEW_NOTES.md` |
-| The spec this repo answers to, and the prompts that rebuild it | `spec/` |
-
-Three files under `docs/` are gitignored because they are interview
-preparation rather than documentation: `ELEVATOR_PITCH.md`,
-`INTERVIEW_NOTES.md`, and `DEMO_SCRIPT.md`. They stay on the machine that
-wrote them.
-
-## Spec-driven
-
-`spec/SPEC.md` states purpose, constraints, and invariants; `spec/FEATURES.md`
-lists every feature with checkable acceptance criteria; `spec/prompts/` is the
-numbered prompt sequence that recreates the repository slice by slice, plus a
-template for modifying one feature. `make spec-check` tests the mechanical
-criteria. The spec was extracted from the code after the first build and leads
-from then on; `spec/CHANGE-PROTOCOL.md` says how.
-
-## Requirements
-
-Docker, kind, kubectl, helm 3, terraform 1.6+, ansible-core 2.16+, sops, age,
-conftest, and `psycopg2-binary`. `scripts/bootstrap.sh` checks for each one
-and tells you what is missing.
-
-## Run it
-
-```bash
-./scripts/bootstrap.sh          # preflight checks
-make cluster                    # kind cluster + registry-less local images
-make db                         # Postgres container + Ansible roles + migrations
-make deploy ENV=dev             # terraform apply against the kind cluster
-make smoke ENV=dev              # post-deploy checks
-make policy                     # helm template | conftest test
-make destroy                    # tear everything down
-```
-
-Each `make` target prints the underlying command before running it, so a
-screenshare viewer can see exactly what is happening.
