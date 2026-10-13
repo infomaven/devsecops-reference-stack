@@ -146,6 +146,42 @@ them to the logs; repositories pinned by SHA were unaffected
   failure is the change that closes the class rather than this instance, and
   it is one line.
 
+## 12. IaC vetting reports more than it blocks
+
+`iac-vetting.yml` blocks on formatting, validation, schema errors,
+actionlint and the Kubescape floors. Everything else it finds is report-only
+until the repository variable `IAC_VETTING_BLOCKING` is set, because on the
+day it was written the scanners returned:
+
+- **Checkov, 26 failed checks on the chart.** Nineteen are the Helm test
+  pod, which carries none of the Deployment's hardening (`findings/0006`).
+  Three are the default namespace, an artifact of Checkov rendering the
+  chart with no release namespace. The other four are on the Deployment:
+  the service account token (`0015`), tag rather than digest (`0017`), the
+  password as an environment variable, and the pull policy.
+- **zizmor, 33 findings in the four older workflows.** Unpinned actions
+  (item 11, `0003`), input interpolated into shell (`0022`), broad
+  permissions and inherited secrets (`0014`). None in `iac-vetting.yml`.
+- **tflint, 3 warnings.** `terraform/modules/app` declares no
+  `required_version` and no `required_providers`.
+- **Kubescape, 77.5 on NSA and 100 on MITRE** for every environment. The
+  floors are 75 and 100: they stop a regression, they do not certify the
+  chart.
+
+Three limits of the workflow itself:
+
+- Checkov has one applicable check for this Terraform and none for these
+  Ansible roles. The Kubernetes and Helm providers are thinly covered, so
+  the Rego plan policy in `pr-checks.yml` is still the real Terraform gate.
+- `pr-checks.yml` still runs its own, older Checkov on Terraform only. The
+  two overlap until that job is retired.
+- It has not run on GitHub. Its steps were executed in an Ubuntu container
+  against this tree, which exercises the commands and the checksums but not
+  the runner image, the artifact uploads or the code-scanning job.
+
+The fix is the findings, not the switch: close them, raise the floors, then
+set `IAC_VETTING_BLOCKING`.
+
 ## What is deliberately not on this list
 
 Local state, a single kind cluster, and the demo password in the Makefile
