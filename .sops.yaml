@@ -1,0 +1,11 @@
+---
+# Which key encrypts what. Only the values are encrypted, so a reviewer can
+# still read the structure of the file in a pull request diff.
+creation_rules:
+  - path_regex: secrets/dev\.enc\.yaml$
+    age: age1exampledevpublickeyreplacewithyourown000000000000000000
+  - path_regex: secrets/staging\.enc\.yaml$
+    age: age1examplestagingpublickeyreplacewithyourown00000000000000
+  - path_regex: secrets/prod\.enc\.yaml$
+    age: age1exampleprodpublickeyreplacewithyourown0000000000000000
+    encrypted_regex: "^(db_password|api_token)$"

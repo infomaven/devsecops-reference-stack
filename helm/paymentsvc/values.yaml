@@ -1,0 +1,72 @@
+---
+# Defaults. Every environment file overrides only what differs, so a reviewer
+# can see the delta between dev, staging, and prod in a few lines.
+replicaCount: 1
+
+image:
+  repository: nginxinc/nginx-unprivileged
+  # Pinned. The chart refuses to render with "latest" (see _helpers.tpl) and
+  # the Rego policy in policy/kubernetes fails the build as a second gate.
+  tag: "1.27.2-alpine"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8080
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 128Mi
+
+# Pod and container hardening. Defaults are the restrictive case; an
+# environment has to opt out in writing, which shows up in review.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  fsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+probes:
+  liveness:
+    path: /
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  readiness:
+    path: /
+    initialDelaySeconds: 3
+    periodSeconds: 5
+
+config:
+  logLevel: info
+  featureFlags: "payments-v2=off"
+
+database:
+  host: host.docker.internal
+  port: 5432
+  name: paymentsvc
+  user: paymentsvc_app
+  # The password never appears here. It is written into a Kubernetes Secret by
+  # the pipeline after SOPS decryption. See docs/SECRETS.md.
+  existingSecret: paymentsvc-db
+
+networkPolicy:
+  enabled: true
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

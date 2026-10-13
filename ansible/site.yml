@@ -1,0 +1,26 @@
+---
+- name: Configure Postgres and application databases
+  hosts: databases
+  gather_facts: false
+  vars_files:
+    - group_vars/vault.yml
+
+  pre_tasks:
+    - name: Wait for the database to accept connections
+      community.postgresql.postgresql_ping:
+        login_host: "{{ db_host }}"
+        login_port: "{{ db_port }}"
+        login_user: "{{ postgres_superuser }}"
+        login_password: "{{ postgres_superuser_password }}"
+        db: postgres
+      register: ping
+      until: ping is succeeded
+      retries: 10
+      delay: 3
+      tags: [always]
+
+  roles:
+    - role: postgres_server
+      tags: [server]
+    - role: app_database
+      tags: [database, migrate]

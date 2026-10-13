@@ -1,0 +1,29 @@
+---
+# Non-secret defaults. Secrets live in group_vars/vault.yml, encrypted with
+# ansible-vault, and are referenced by name here so a reader can see what is
+# secret without seeing the value.
+postgres_superuser: postgres
+postgres_superuser_password: "{{ vault_postgres_superuser_password }}"
+
+app_databases:
+  - name: paymentsvc_dev
+    owner: paymentsvc_app
+    extensions: [pgcrypto]
+  - name: paymentsvc_staging
+    owner: paymentsvc_app
+    extensions: [pgcrypto]
+  - name: paymentsvc_prod
+    owner: paymentsvc_app
+    extensions: [pgcrypto]
+
+app_role:
+  name: paymentsvc_app
+  password: "{{ vault_app_db_password }}"
+
+readonly_role:
+  name: paymentsvc_ro
+  password: "{{ vault_readonly_db_password }}"
+
+backup_dir: /tmp/pg_backups
+backup_retention_days: 7
+migrations_dir: "{{ playbook_dir }}/../db/migrations"

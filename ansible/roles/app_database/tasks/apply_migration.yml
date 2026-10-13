@@ -1,0 +1,39 @@
+---
+- name: "Collect migrations already applied to {{ database.name }}"
+  ansible.builtin.set_fact:
+    already_applied: >-
+      {{ (applied.results
+          | selectattr('item.name', 'equalto', database.name)
+          | map(attribute='query_result')
+          | first
+          | default([])
+          | map(attribute='filename')
+          | list) }}
+
+- name: "Apply pending migrations to {{ database.name }}"
+  community.postgresql.postgresql_script:
+    db: "{{ database.name }}"
+    path: "{{ item }}"
+    login_host: "{{ db_host }}"
+    login_port: "{{ db_port }}"
+    login_user: "{{ postgres_superuser }}"
+    login_password: "{{ postgres_superuser_password }}"
+  loop: "{{ migration_files.files | map(attribute='path') | sort }}"
+  loop_control:
+    label: "{{ item | basename }}"
+  when: (item | basename) not in already_applied
+
+- name: "Record applied migrations for {{ database.name }}"
+  community.postgresql.postgresql_query:
+    db: "{{ database.name }}"
+    login_host: "{{ db_host }}"
+    login_port: "{{ db_port }}"
+    login_user: "{{ postgres_superuser }}"
+    login_password: "{{ postgres_superuser_password }}"
+    query: "INSERT INTO {{ migration_table }} (filename) VALUES (%s) ON CONFLICT DO NOTHING"
+    positional_args:
+      - "{{ item | basename }}"
+  loop: "{{ migration_files.files | map(attribute='path') | sort }}"
+  loop_control:
+    label: "{{ item | basename }}"
+  when: (item | basename) not in already_applied

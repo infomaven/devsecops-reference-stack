@@ -1,0 +1,7 @@
+---
+replicaCount: 1
+config:
+  logLevel: debug
+  featureFlags: "payments-v2=on"
+database:
+  name: paymentsvc_dev

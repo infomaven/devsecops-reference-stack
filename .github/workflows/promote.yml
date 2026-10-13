@@ -1,0 +1,40 @@
+---
+name: promote
+
+# One commit, three environments, in order. dev applies on merge; staging and
+# prod wait for a reviewer on the GitHub environment, which is where the peer
+# review gate actually lives. A failed smoke test stops the promotion before
+# the next environment starts.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write   # OIDC to the cloud account; no long-lived keys in CI
+
+concurrency:
+  group: promote
+  cancel-in-progress: false
+
+jobs:
+  dev:
+    uses: ./.github/workflows/apply.yml
+    with:
+      environment: dev
+    secrets: inherit
+
+  staging:
+    needs: dev
+    uses: ./.github/workflows/apply.yml
+    with:
+      environment: staging
+    secrets: inherit
+
+  prod:
+    needs: staging
+    uses: ./.github/workflows/apply.yml
+    with:
+      environment: prod
+    secrets: inherit

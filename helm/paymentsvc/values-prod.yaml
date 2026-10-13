@@ -1,0 +1,17 @@
+---
+replicaCount: 3
+config:
+  logLevel: warn
+  featureFlags: "payments-v2=off"
+database:
+  name: paymentsvc_prod
+resources:
+  requests:
+    cpu: 200m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2

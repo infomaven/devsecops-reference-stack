@@ -1,0 +1,111 @@
+---
+- name: Create application databases
+  community.postgresql.postgresql_db:
+    name: "{{ item.name }}"
+    owner: "{{ item.owner }}"
+    encoding: UTF-8
+    state: present
+    login_host: "{{ db_host }}"
+    login_port: "{{ db_port }}"
+    login_user: "{{ postgres_superuser }}"
+    login_password: "{{ postgres_superuser_password }}"
+  loop: "{{ app_databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+  tags: [database]
+
+- name: Enable required extensions
+  community.postgresql.postgresql_ext:
+    name: "{{ ext }}"
+    db: "{{ item.name }}"
+    login_host: "{{ db_host }}"
+    login_port: "{{ db_port }}"
+    login_user: "{{ postgres_superuser }}"
+    login_password: "{{ postgres_superuser_password }}"
+  loop: "{{ app_databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+  vars:
+    ext: "{{ item.extensions | first }}"
+  tags: [database]
+
+- name: Revoke the public schema default grants
+  community.postgresql.postgresql_privs:
+    db: "{{ item.name }}"
+    type: schema
+    objs: public
+    roles: PUBLIC
+    privs: CREATE
+    state: absent
+    login_host: "{{ db_host }}"
+    login_port: "{{ db_port }}"
+    login_user: "{{ postgres_superuser }}"
+    login_password: "{{ postgres_superuser_password }}"
+  loop: "{{ app_databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+  tags: [database]
+
+- name: Grant the read-only role select on existing and future tables
+  community.postgresql.postgresql_privs:
+    db: "{{ item.name }}"
+    type: default_privs
+    objs: TABLES
+    privs: SELECT
+    role: "{{ readonly_role.name }}"
+    state: present
+    login_host: "{{ db_host }}"
+    login_port: "{{ db_port }}"
+    login_user: "{{ postgres_superuser }}"
+    login_password: "{{ postgres_superuser_password }}"
+  loop: "{{ app_databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+  tags: [database]
+
+- name: Ensure the migration ledger exists
+  community.postgresql.postgresql_query:
+    db: "{{ item.name }}"
+    login_host: "{{ db_host }}"
+    login_port: "{{ db_port }}"
+    login_user: "{{ postgres_superuser }}"
+    login_password: "{{ postgres_superuser_password }}"
+    query: >-
+      CREATE TABLE IF NOT EXISTS {{ migration_table }} (
+        filename text PRIMARY KEY,
+        applied_at timestamptz NOT NULL DEFAULT now()
+      )
+  loop: "{{ app_databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+  tags: [migrate]
+
+- name: Find migration files
+  ansible.builtin.find:
+    paths: "{{ migrations_dir }}"
+    patterns: "*.sql"
+  register: migration_files
+  delegate_to: localhost
+  tags: [migrate]
+
+- name: Read the migrations already applied
+  community.postgresql.postgresql_query:
+    db: "{{ item.name }}"
+    login_host: "{{ db_host }}"
+    login_port: "{{ db_port }}"
+    login_user: "{{ postgres_superuser }}"
+    login_password: "{{ postgres_superuser_password }}"
+    query: "SELECT filename FROM {{ migration_table }}"
+  loop: "{{ app_databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: applied
+  tags: [migrate]
+
+- name: Apply pending migrations in filename order
+  ansible.builtin.include_tasks: apply_migration.yml
+  loop: "{{ app_databases }}"
+  loop_control:
+    loop_var: database
+    label: "{{ database.name }}"
+  tags: [migrate]

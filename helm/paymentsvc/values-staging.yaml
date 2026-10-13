@@ -1,0 +1,10 @@
+---
+replicaCount: 2
+config:
+  logLevel: info
+  featureFlags: "payments-v2=on"
+database:
+  name: paymentsvc_staging
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

@@ -1,0 +1,5 @@
+---
+# Migrations are plain SQL, applied in filename order, each one recorded in a
+# schema_migrations table so a re-run is a no-op. That keeps the playbook
+# idempotent, which is the property I want to demonstrate.
+migration_table: schema_migrations

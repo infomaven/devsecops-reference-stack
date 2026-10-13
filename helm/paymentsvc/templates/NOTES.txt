@@ -1,0 +1,9 @@
+{{ .Chart.Name }} {{ .Chart.Version }} released as {{ .Release.Name }} in namespace {{ .Release.Namespace }}.
+
+Replicas: {{ .Values.replicaCount }}
+Image:    {{ include "paymentsvc.image" . }}
+Log level:{{ .Values.config.logLevel }}
+
+Verify:
+  kubectl -n {{ .Release.Namespace }} rollout status deploy/{{ include "paymentsvc.fullname" . }}
+  helm test {{ .Release.Name }} -n {{ .Release.Namespace }}

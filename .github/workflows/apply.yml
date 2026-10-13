@@ -1,0 +1,58 @@
+---
+name: apply
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  apply:
+    name: apply ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    # Required reviewers and a wait timer are configured on the GitHub
+    # environment. staging and prod have them; dev does not.
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - name: decrypt the environment secret
+        env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+        run: |
+          curl -sSL -o sops https://github.com/getsops/sops/releases/download/v3.9.1/sops-v3.9.1.linux.amd64
+          chmod +x sops && sudo mv sops /usr/local/bin/
+          # Written to the job environment, never to a file in the workspace.
+          echo "TF_VAR_db_password=$(sops -d --extract '["db_password"]' \
+            secrets/${{ inputs.environment }}.enc.yaml)" >> "$GITHUB_ENV"
+
+      - name: terraform apply
+        run: |
+          terraform -chdir=terraform/envs/${{ inputs.environment }} init -input=false
+          terraform -chdir=terraform/envs/${{ inputs.environment }} apply \
+            -input=false -auto-approve -var "image_tag=${GITHUB_SHA::12}"
+
+      - name: smoke test
+        run: ./scripts/smoke-test.sh ${{ inputs.environment }}
+
+      - name: roll back on failure
+        if: failure()
+        run: |
+          echo "Smoke test failed. Rolling back to the previous Helm revision."
+          helm rollback paymentsvc -n "paymentsvc-${{ inputs.environment }}" --wait --timeout 5m
+
+      - name: record the deployment
+        if: always()
+        run: |
+          echo "env=${{ inputs.environment }} sha=${GITHUB_SHA} result=${{ job.status }}" >> deployment-log.txt
+          cat deployment-log.txt

@@ -1,0 +1,15 @@
+---
+extends: default
+rules:
+  line-length:
+    max: 140
+    level: warning
+  comments:
+    min-spaces-from-content: 1
+  truthy:
+    allowed-values: ["true", "false", "on"]
+ignore: |
+  helm/paymentsvc/templates/
+  # Vendored unmodified from security-engineer-toolkit. Lint it there, not
+  # here, so a re-copy is never blocked by this repository's style rules.
+  .github/workflows/security-scan.yml

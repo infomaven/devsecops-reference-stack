@@ -1,0 +1,42 @@
+---
+# Server-level configuration: logging that an auditor can read, slow-query
+# visibility, and no superuser login for the application.
+
+- name: Apply server settings
+  community.postgresql.postgresql_set:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    login_host: "{{ db_host }}"
+    login_port: "{{ db_port }}"
+    login_user: "{{ postgres_superuser }}"
+    login_password: "{{ postgres_superuser_password }}"
+    db: postgres
+  loop: "{{ postgres_settings | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  register: settings
+  notify: Reload postgres
+
+- name: Create the application role with no superuser rights
+  community.postgresql.postgresql_user:
+    name: "{{ app_role.name }}"
+    password: "{{ app_role.password }}"
+    role_attr_flags: NOSUPERUSER,NOCREATEDB,NOCREATEROLE,LOGIN
+    login_host: "{{ db_host }}"
+    login_port: "{{ db_port }}"
+    login_user: "{{ postgres_superuser }}"
+    login_password: "{{ postgres_superuser_password }}"
+    db: postgres
+  no_log: true
+
+- name: Create the read-only role
+  community.postgresql.postgresql_user:
+    name: "{{ readonly_role.name }}"
+    password: "{{ readonly_role.password }}"
+    role_attr_flags: NOSUPERUSER,NOCREATEDB,NOCREATEROLE,LOGIN
+    login_host: "{{ db_host }}"
+    login_port: "{{ db_port }}"
+    login_user: "{{ postgres_superuser }}"
+    login_password: "{{ postgres_superuser_password }}"
+    db: postgres
+  no_log: true

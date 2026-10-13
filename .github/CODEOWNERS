@@ -1,0 +1,9 @@
+# Peer review is enforced by ownership, not by convention. The prod state and
+# the policies need a second pair of eyes from a different group than the one
+# that writes application changes.
+*                         @platform-team
+/terraform/envs/prod/     @platform-team @security-team
+/policy/                  @security-team
+/secrets/                 @security-team
+/.github/workflows/       @platform-team @security-team
+/ansible/                 @platform-team @dba-team

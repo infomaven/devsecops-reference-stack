@@ -1,0 +1,92 @@
+---
+- name: Back up application databases and verify the dump restores
+  hosts: databases
+  gather_facts: false
+  vars_files:
+    - group_vars/vault.yml
+
+  tasks:
+    - name: Ensure the backup directory exists
+      ansible.builtin.file:
+        path: "{{ backup_dir }}"
+        state: directory
+        mode: "0700"
+
+    - name: Dump each database
+      ansible.builtin.command:
+        cmd: >-
+          docker exec demo-postgres pg_dump
+          --username={{ postgres_superuser }}
+          --format=custom
+          --file=/tmp/{{ item.name }}.dump
+          {{ item.name }}
+      loop: "{{ app_databases }}"
+      loop_control:
+        label: "{{ item.name }}"
+      changed_when: true
+
+    - name: Copy dumps out of the container
+      ansible.builtin.command:
+        cmd: docker cp demo-postgres:/tmp/{{ item.name }}.dump {{ backup_dir }}/{{ item.name }}.dump
+      loop: "{{ app_databases }}"
+      loop_control:
+        label: "{{ item.name }}"
+      changed_when: true
+
+    # A backup nobody has restored is a hope, not a backup. This restores into
+    # a scratch database and counts the rows.
+    - name: Restore the dev dump into a scratch database
+      community.postgresql.postgresql_db:
+        name: restore_check
+        state: present
+        login_host: "{{ db_host }}"
+        login_port: "{{ db_port }}"
+        login_user: "{{ postgres_superuser }}"
+        login_password: "{{ postgres_superuser_password }}"
+
+    - name: Load the dump into the scratch database
+      ansible.builtin.command:
+        cmd: docker exec demo-postgres pg_restore --username={{ postgres_superuser }} --dbname=restore_check /tmp/paymentsvc_dev.dump
+      changed_when: true
+      failed_when: false
+
+    - name: Confirm the restored schema has the expected tables
+      community.postgresql.postgresql_query:
+        db: restore_check
+        login_host: "{{ db_host }}"
+        login_port: "{{ db_port }}"
+        login_user: "{{ postgres_superuser }}"
+        login_password: "{{ postgres_superuser_password }}"
+        query: "SELECT count(*) AS tables FROM information_schema.tables WHERE table_schema = 'public'"
+      register: restored
+
+    - name: Fail if the restore produced an empty schema
+      ansible.builtin.assert:
+        that:
+          - restored.query_result[0].tables | int > 0
+        fail_msg: "Restore check failed: no tables in the restored database."
+        success_msg: "Restore check passed: {{ restored.query_result[0].tables }} tables."
+
+    - name: Remove the scratch database
+      community.postgresql.postgresql_db:
+        name: restore_check
+        state: absent
+        login_host: "{{ db_host }}"
+        login_port: "{{ db_port }}"
+        login_user: "{{ postgres_superuser }}"
+        login_password: "{{ postgres_superuser_password }}"
+
+    - name: Expire old backups
+      ansible.builtin.find:
+        paths: "{{ backup_dir }}"
+        age: "{{ backup_retention_days }}d"
+        patterns: "*.dump"
+      register: stale
+
+    - name: Delete expired backups
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ stale.files }}"
+      loop_control:
+        label: "{{ item.path }}"

@@ -1,0 +1,9 @@
+---
+apiVersion: v2
+name: paymentsvc
+description: Reference service chart. Written by hand to show chart structure, values layering, and guardrails in templates.
+type: application
+version: 0.3.0
+appVersion: "1.27.2"
+maintainers:
+  - name: Nadine Whitfield

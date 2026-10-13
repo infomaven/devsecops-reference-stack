@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "paymentsvc.fullname" . }}-test"
+  labels:
+    {{- include "paymentsvc.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: hook-succeeded
+spec:
+  restartPolicy: Never
+  containers:
+    - name: curl
+      image: curlimages/curl:8.10.1
+      command: ["curl"]
+      args:
+        - "--fail"
+        - "--silent"
+        - "--show-error"
+        - "http://{{ include "paymentsvc.fullname" . }}:{{ .Values.service.port }}/"

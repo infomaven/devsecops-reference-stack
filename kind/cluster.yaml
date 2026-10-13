@@ -1,0 +1,27 @@
+---
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: devsecops-demo
+networking:
+  # kind ships kindnet as its CNI and installs it by default. Leave this false
+  # for the demo so the cluster comes up ready. Flip it to true for the
+  # "Kubernetes from scratch" walkthrough: nodes then sit NotReady and CoreDNS
+  # stays Pending until a CNI is installed, which makes the bootstrap order
+  # visible instead of hidden.
+  disableDefaultCNI: false
+  podSubnet: "10.244.0.0/16"
+  serviceSubnet: "10.96.0.0/12"
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 8080
+        protocol: TCP
+  - role: worker
+  - role: worker

@@ -1,0 +1,251 @@
+# Copied from security-engineer-toolkit: templates/github-actions/security-scan.yml
+# Unmodified. Update by re-copying from the toolkit, not by editing here.
+#
+# Security scan: secrets, SAST, vulnerable dependencies, IaC, SBOM.
+# From security-engineer-toolkit: templates/github-actions/security-scan.yml
+#
+# Copy to .github/workflows/security-scan.yml in the repository you want
+# scanned. Setup, blocking policy, suppressions, and how to update pins:
+# templates/github-actions/README.md in the toolkit.
+#
+# Supply-chain hygiene this file follows, and why:
+#   * Every action is pinned to a full commit SHA, not a tag. Tags are
+#     mutable: in March 2026 attackers force-pushed 76 of 77
+#     aquasecurity/trivy-action tags to a credential stealer
+#     (CVE-2026-33634). A commit SHA can't be moved under you.
+#   * Every scanner binary is downloaded at a pinned version and checked
+#     against a SHA-256 recorded below, so a replaced release asset fails
+#     the job instead of running inside your pipeline.
+#   * The workflow token is read-only. The one job that uploads to code
+#     scanning asks for exactly that permission and nothing more.
+#   * No pull_request_target: pull requests from forks run without secrets
+#     or write access.
+
+name: security-scan
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # Weekly: new CVEs land against dependencies you didn't change.
+    - cron: "23 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-scan-${{ github.ref }}
+  # Superseded pull request pushes can be cancelled. Scans of main and the
+  # weekly scheduled run always finish.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  GITLEAKS_VERSION: "8.30.1"
+  GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+  TRIVY_VERSION: "0.74.0"
+  TRIVY_SHA256: "2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a"
+  SEMGREP_VERSION: "1.178.0"
+
+jobs:
+  secrets:
+    name: Secrets (Gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Full history: a secret deleted in a later commit is still exposed.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Gitleaks (pinned, checksum-verified)
+        run: |
+          curl -sSfL -o gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum --check --strict
+          tar -xzf gitleaks.tar.gz gitleaks
+          rm gitleaks.tar.gz
+
+      # Blocking, always. A committed secret is an incident (rotate it), not
+      # a backlog item. After rotating, add the finding's fingerprint to
+      # .gitleaksignore so the rotated secret stops failing the build.
+      - name: Scan repository history
+        run: |
+          ./gitleaks git --no-banner --redact \
+            --report-format sarif --report-path gitleaks.sarif \
+            --exit-code 1 .
+
+      - name: Summary
+        if: always()
+        run: |
+          n=$(jq '[.runs[].results[]] | length' gitleaks.sarif 2>/dev/null || echo "n/a")
+          echo "### Gitleaks: ${n} secret(s) found (blocking)" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: sarif-gitleaks
+          path: gitleaks.sarif
+          if-no-files-found: ignore
+
+  sast:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # PyPI won't let a published file be replaced, so a pinned version
+      # can't be swapped the way a mutable container tag can. Its transitive
+      # dependencies aren't hash-pinned here; see the README if you need that.
+      - name: Install Semgrep (pinned)
+        run: pipx install "semgrep==${SEMGREP_VERSION}"
+
+      # Report-only until you set the repository variable
+      # SEMGREP_BLOCKING=true. Triage the first run's backlog before gating
+      # on it (see OPERATING-MODEL.md: raw scanner output isn't a backlog).
+      - name: Scan
+        env:
+          BLOCKING: ${{ vars.SEMGREP_BLOCKING == 'true' }}
+          # The version is pinned above, so a "newer version available"
+          # check is one more outbound call with nothing to act on.
+          SEMGREP_ENABLE_VERSION_CHECK: "0"
+        run: |
+          args=(scan --metrics=off --sarif-output=semgrep.sarif
+                --config p/security-audit --config p/owasp-top-ten)
+          # Your own rules, from the Prevent phase: a pattern that
+          # /remediation-note flags as recurring belongs in .semgrep/.
+          if [ -d .semgrep ]; then args+=(--config .semgrep); fi
+          if [ "$BLOCKING" = "true" ]; then args+=(--error); fi
+          semgrep "${args[@]}"
+
+      - name: Summary
+        if: always()
+        env:
+          BLOCKING: ${{ vars.SEMGREP_BLOCKING == 'true' }}
+        run: |
+          n=$(jq '[.runs[].results[]] | length' semgrep.sarif 2>/dev/null || echo "n/a")
+          mode=$([ "$BLOCKING" = "true" ] && echo "blocking" || echo "report-only")
+          echo "### Semgrep: ${n} finding(s) (${mode})" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: sarif-semgrep
+          path: semgrep.sarif
+          if-no-files-found: ignore
+
+  dependencies:
+    name: Dependencies, IaC and SBOM (Trivy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Trivy (pinned, checksum-verified)
+        run: |
+          curl -sSfL -o trivy.tar.gz \
+            "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          echo "${TRIVY_SHA256}  trivy.tar.gz" | sha256sum --check --strict
+          tar -xzf trivy.tar.gz trivy
+          rm trivy.tar.gz
+
+      # HIGH and CRITICAL only, and only where a fix exists: the actionable
+      # subset. Report-only until you set TRIVY_BLOCKING=true.
+      # "misconfig" covers Dockerfiles, Terraform, Kubernetes, and other IaC.
+      - name: Vulnerable dependencies and IaC misconfiguration
+        env:
+          BLOCKING: ${{ vars.TRIVY_BLOCKING == 'true' }}
+        run: |
+          code=0; [ "$BLOCKING" = "true" ] && code=1
+          ./trivy fs --scanners vuln,misconfig --severity HIGH,CRITICAL \
+            --ignore-unfixed --exit-code "$code" .
+
+      - name: SARIF for code scanning
+        if: always()
+        run: |
+          ./trivy fs --scanners vuln,misconfig --severity HIGH,CRITICAL \
+            --ignore-unfixed --format sarif --output trivy.sarif .
+
+      # The component inventory OPERATING-MODEL.md's first-pass milestones
+      # ask for, regenerated on every run and kept as an artifact.
+      - name: SBOM (CycloneDX)
+        if: always()
+        run: ./trivy fs --format cyclonedx --output sbom.cdx.json .
+
+      - name: Summary
+        if: always()
+        env:
+          BLOCKING: ${{ vars.TRIVY_BLOCKING == 'true' }}
+        run: |
+          n=$(jq '[.runs[].results[]] | length' trivy.sarif 2>/dev/null || echo "n/a")
+          c=$(jq '.components | length' sbom.cdx.json 2>/dev/null || echo "n/a")
+          mode=$([ "$BLOCKING" = "true" ] && echo "blocking" || echo "report-only")
+          echo "### Trivy: ${n} fixable HIGH/CRITICAL finding(s) (${mode}); SBOM lists ${c} component(s)" >> "$GITHUB_STEP_SUMMARY"
+          # Trivy reads lockfiles, not bare manifests. Without one, "0 findings"
+          # means "couldn't see your dependencies," so say that out loud.
+          if [ "$c" = "0" ]; then
+            echo "::warning title=No dependency lockfiles found::Trivy couldn't see any dependencies. Commit your lockfile (package-lock.json, pnpm-lock.yaml, yarn.lock, poetry.lock, uv.lock, gradle.lockfile, ...)."
+            echo "> **No dependency lockfiles found.** The dependency scan and SBOM are empty because Trivy couldn't see your dependencies, not because they're clean." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: sarif-trivy
+          path: trivy.sarif
+          if-no-files-found: ignore
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: sbom-cyclonedx
+          path: sbom.cdx.json
+          if-no-files-found: ignore
+
+  # Optional. Set the repository variable CODE_SCANNING_UPLOAD=true if code
+  # scanning is available to this repo: free for public repositories, and
+  # included with GitHub Code Security for private ones. Without it, results
+  # stay in the workflow artifacts above.
+  code-scanning:
+    name: Upload to GitHub code scanning
+    needs: [secrets, sast, dependencies]
+    if: always() && vars.CODE_SCANNING_UPLOAD == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: sarif-*
+          path: sarif
+
+      - name: Upload Gitleaks results
+        if: hashFiles('sarif/sarif-gitleaks/gitleaks.sarif') != ''
+        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: sarif/sarif-gitleaks/gitleaks.sarif
+          category: gitleaks
+
+      - name: Upload Semgrep results
+        if: hashFiles('sarif/sarif-semgrep/semgrep.sarif') != ''
+        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: sarif/sarif-semgrep/semgrep.sarif
+          category: semgrep
+
+      - name: Upload Trivy results
+        if: hashFiles('sarif/sarif-trivy/trivy.sarif') != ''
+        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: sarif/sarif-trivy/trivy.sarif
+          category: trivy
