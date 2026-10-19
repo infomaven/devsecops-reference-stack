@@ -116,7 +116,7 @@ them to the logs; repositories pinned by SHA were unaffected
 **It failed in three layers, and the middle one is the lesson.**
 
 1. *Stated.* `spec/SPEC.md` I10 says every action this repository authors is
-   pinned by commit SHA. `docs/TWO_REPOS.md` went further and claimed it was
+   pinned by commit SHA. `docs/SELF_AUDIT.md` (then `TWO_REPOS.md`) went further and claimed it was
    already done; that sentence has been corrected to say what is true. The
    comment at `pr-checks.yml:48` states the reasoning correctly, directly
    above the one line that follows it.
