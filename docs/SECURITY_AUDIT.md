@@ -29,10 +29,29 @@ stages of the audit's lifecycle, and each states plainly what it does not do:
 **1. Provenance sets the review mode for the tool.** For example, this pipeline came out of one Claude Code generation session. The toolkit calls that case **Scenario B**: a single process that may have introduced something, as opposed to an existing repo which could potentially contain years of risk built up by multiple authors and commit history. The tool's review is aimed at what Claud e Code generation tends to leave behind. The actual steps are in `docs/EXERCISE.md`.
 
 **2. Shared CI.** `.github/workflows/security-scan.yml` lives in the toolkit's
-template and is copied unmodified to this repo. It runs Gitleaks, Semgrep, Trivy, and a CycloneDX SBOM, with every action pinned by commit SHA and every scanner binary checksum-verified. Most of this repository's own actions are still
-on version tags rather than commit SHAs. That falls short of the template's
-standard, and is noted as such.  (see `docs/REVIEW_NOTES.md` 11). Update the template by re-copying
-it from the toolkit, never by editing it here.
+template and is copied unmodified to this repo. It runs Gitleaks, Semgrep,
+Trivy, and a CycloneDX SBOM, with every action pinned by commit SHA and every
+scanner binary checksum-verified. Update the template by re-copying it from
+the toolkit, never by editing it here.
+
+Most of this repository's own actions are still on version tags rather than
+commit SHAs. That falls short of the template's standard, and is noted as
+such (see `docs/REVIEW_NOTES.md` 11).
+
+*Why a tag is not enough.* `uses: actions/checkout@v4` names a tag, and a
+tag is a pointer the action's owner can move to any commit at any time.
+Anyone who takes over the owner's account can move it too. When a tag
+moves, nothing changes in this repository: no diff, no pull request, no
+entry in `git log`. The next run executes the new code with the job's token,
+its secrets, and its cloud identity. This has happened. In March 2025 the
+tags of `tj-actions/changed-files` were repointed at a commit that dumped
+runner secrets into the build logs (CVE-2025-30066). Workflows pinned by
+commit SHA kept running the old code and were unaffected. A commit SHA
+cannot be moved; it always names the same code.
+
+The fix is to pin each reference to the commit SHA its tag points at today
+and let Dependabot move the pin through review. The step-by-step workaround
+is in `docs/REVIEW_NOTES.md` 11.
 
 **3. A closed finding loop.** Toolkit output lands in `findings/`. Every
 finding ends in one of three ways: a fix, a Rego rule in `policy/`, or an

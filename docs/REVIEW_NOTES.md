@@ -134,8 +134,9 @@ them to the logs; repositories pinned by SHA were unaffected
 
 **The fix, in increasing order of value.**
 
-- Pin the thirteen references. Dependabot updates SHA-pinned actions and keeps
-  the `# v4.2.1` comment current, so this does not freeze them.
+- Pin the thirteen references, as in the workaround below. Dependabot
+  updates SHA-pinned actions and keeps the version comment current, so this
+  does not freeze them.
 - Test the invariant rather than a proxy. `spec-check.sh` now counts
   unpinned external references on every run and reports I10 as partial with
   the live count, so the number falls as references are pinned and the line
@@ -145,6 +146,29 @@ them to the logs; repositories pinned by SHA were unaffected
   invariants with no mechanical test. Promoting that list from a report to a
   failure is the change that closes the class rather than this instance, and
   it is one line.
+
+**The workaround.** Pin each reference to the full 40-character SHA that the
+tag points at today, and keep the version as a comment:
+
+```bash
+# Resolve a tag to its commit SHA (follows annotated tags)
+gh api repos/actions/checkout/commits/v4.2.2 --jq .sha
+```
+
+```yaml
+# before
+- uses: actions/checkout@v4
+# after: the SHA printed above, with the version kept as a comment
+- uses: actions/checkout@<40-character-sha>  # v4.2.2
+```
+
+Then add `.github/dependabot.yml` with a `github-actions` entry. Dependabot
+opens pull requests that move the SHA and update the version comment
+together, so pinned actions still get updates, now through review. To stop
+new tag references from getting in, turn on GitHub's "Require actions to be
+pinned to a full-length commit SHA" policy under Settings > Actions >
+General. `make spec-check` reports the number of unpinned references on its
+I10 line, and that line passes once the count reaches zero.
 
 ## What is deliberately not on this list
 
