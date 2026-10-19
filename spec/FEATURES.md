@@ -27,7 +27,7 @@ produces or modifies the feature. Status: done, partial, or planned.
 | F19 | Operator scripts and Makefile | bootstrap preflight, demo reset, Makefile targets that echo their commands | `scripts/*.sh`, `Makefile` | P09 | done |
 | F20 | Decision records | ADRs for records, SOPS, Helm over manifests, promotion model (I12) | `docs/adr/*` | P10 | done |
 | F21 | Threat model and monitoring | STRIDE table with mitigations and stated weaknesses; monitoring doc with the three deploy questions and testing by layer | `docs/THREAT_MODEL.md`, `docs/MONITORING.md` | P10 | done |
-| F22 | Audit loop | EXERCISE.md loop, findings directory with template, `make exercise`, SELF_AUDIT.md | `docs/EXERCISE.md`, `findings/*`, `docs/SELF_AUDIT.md` | P11 | partial: no findings recorded yet |
+| F22 | Audit loop | EXERCISE.md loop, findings directory with template, `make exercise`, SECURITY_AUDIT.md | `docs/EXERCISE.md`, `findings/*`, `docs/SECURITY_AUDIT.md` | P11 | partial: no findings recorded yet |
 | F23 | Review notes | Known weaknesses in priority order with reasons | `docs/REVIEW_NOTES.md` | P12 | done |
 | F24 | Spec layer | SPEC, FEATURES, prompts, change protocol, conformance script, Claude Code commands | `spec/*`, `scripts/spec-check.sh`, `.claude/commands/*` | P00 | done |
 

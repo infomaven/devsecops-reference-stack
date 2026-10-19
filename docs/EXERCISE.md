@@ -7,7 +7,7 @@ the thing, the other audits it, and the audit is the part most people skip.
 
 ## Why the two fit together
 
-The one-page version, for opening on a screenshare, is `SELF_AUDIT.md`.
+The one-page version, for opening on a screenshare, is `SECURITY_AUDIT.md`.
 
 The toolkit's own `FRAMEWORK-ALIGNMENT.md` states its boundaries plainly.
 Those boundaries are where this repository lives.

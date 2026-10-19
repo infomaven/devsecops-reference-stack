@@ -72,7 +72,7 @@ Follow `docs/K8S_FROM_SCRATCH.md`. If they want hands-on:
 `kubectl get pods -n kube-system` and name each component as it comes up.
 
 ## 7. Optional, if they bite on AI tooling (3 min)
-Open `docs/SELF_AUDIT.md` first: it is the whole argument on one page, and
+Open `docs/SECURITY_AUDIT.md` first: it is the whole argument on one page, and
 reading from it beats reciting. Then `docs/EXERCISE.md`. This repo was generated, then audited with your own
 open-source toolkit: Scenario B, `/security-review` on the whole initial
 commit, findings recorded in `findings/`, and the toolkit's CI template
