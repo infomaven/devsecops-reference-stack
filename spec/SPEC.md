@@ -5,14 +5,10 @@ this date the spec leads and the code follows. See `CHANGE-PROTOCOL.md`.
 
 ## Purpose
 
-A runnable, local-only reference implementation of one DevSecOps delivery
-path: a containerized service deployed to Kubernetes by Terraform and Helm,
-a Postgres database configured by Ansible, secrets encrypted at rest, and a
-CI/CD pipeline that promotes Terraform changes dev to staging to prod behind
-peer review, policy checks, tests, and post-deploy validation.
+A runnable, local-first implementation of a DevSecOps delivery
+pipeline for the following elements: 1) a containerized service deployed to Kubernetes by Terraform and Helm, 2)a Postgres database configured by Ansible, 3) secrets encrypted at rest, and 4) Github actions with promotion gates supporting dev, staging, prod with validation from peer review, policy checks, tests, and post-deploy validation.
 
-It exists to make one pipeline visible end to end, so that each decision in
-it can be pointed at, defended, and improved.
+This project was created to provide a template for learning secure CI/CD principles and serve as a portable practice environment. 
 
 ## Scope
 

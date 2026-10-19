@@ -65,12 +65,9 @@ screenshare viewer can see exactly what is happening.
 
 ## Bonus: Audited with my own tooling
 
-This stack is audited by a second repository of mine,
-`security-engineer-toolkit`: an open-source practice environment and working
-toolkit for security engineers who pair with AI coding agents. It is a set of
-reusable slash commands for Claude Code (a stack-agnostic security sweep, a
-guided fix session, a remediation write-up), a disposable Docker sandbox for
-running code you do not trust yet, and CI workflow templates. It analyzes
+This stack is audited by an AI-assisted review tool. It lives in a second repository of mine, named `security-engineer-toolkit`. It provides 1) An open-source practice environment and working toolkit for security engineers who pair with AI coding agents. 2) A sandbox that enables engineers to safely run and assess security vulnerabilities for a specific repo. 
+
+This repo contains a set of reusable slash commands for Claude Code (a stack-agnostic security sweep, a guided fix session, a remediation write-up), a disposable Docker sandbox for running code you do not trust yet, and CI workflow templates. It analyzes
 source code; it does not run the application or attack a live system.
 
 That pairing matters here because **this repository was generated in a Claude
