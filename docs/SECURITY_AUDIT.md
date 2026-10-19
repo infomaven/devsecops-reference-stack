@@ -1,24 +1,20 @@
-# Self-audit: checking the pipeline with a second repository
+# Security-audit: validate vulnerabilities of this pipeline using a home-grown tool 
 
-This repository builds a secured delivery pipeline, with gates, policy, tests
-and promotion controls. Those gates were written by the same process that
-wrote the code they protect, in this case one Claude Code session. A
-pipeline that only grades itself proves little. So this repository is
-audited by a second one, `security-engineer-toolkit`, which has its own
-tooling, its own threat model, and its own published limits.
+This reference pipeline is bundled with a simple node.JS service that runs against a PostGres backend. For better portability and low friction entry, the service was written using the same Claude Code session that created the pipeline infrastructure elements such as quality gates, security policies, tests
+and promotion controls.  
 
-This page describes that self-audit. It is run here against the reference
-pipeline, but nothing in the method is specific to it. Point the same loop
-at any repository you have the right to review.
+From a security and quality standpoint, there is a chronic shortage of options and tools that can check the actual infrastructure code of the pipeline. To address this risk, I created a separate tool that developers or security engineers can use to evaluate the security posture of ANY code repo from GitHub. The tool is called `security-engineer-toolkit`. It is designed to scan repos using OWASP Top 10 Vulnerabilities and several other standard security frameworks as the basis for identifying issues. It also has capability to provide a sand-boxed environment that can be used to safely run unfamiliar code.
 
-## Why a second repository
+This page describes how `security-engineer-toolkit` can be used to evaluate  reference pipeline implemented by this repo. 
 
-An audit is only worth something if it is independent of the thing it
+## Why a second tool
+
+An audit is only valuable if it runs independently of the thing it
 checks. Keeping the auditor in its own repository keeps it honest in three
 ways. It is versioned and released on its own schedule. It cannot quietly
-be weakened to make this stack pass. And it can be reused on other
-codebases without carrying this stack along. The two also cover different
-stages of the lifecycle, and each states plainly what it does not do:
+be weakened to make this stack pass. And it can be reused against other
+codebases without carrying this stack along. The two repos cover different
+stages of the audit's lifecycle, and each states plainly what it does not do:
 
 | | `security-engineer-toolkit` (auditor) | `devsecops-reference-stack` (audited) |
 |---|---|---|
@@ -30,18 +26,12 @@ stages of the lifecycle, and each states plainly what it does not do:
 
 ## The self-audit, applied to this repository
 
-**1. Provenance sets the review.** This stack came out of one generation
-session. The toolkit calls that case **Scenario B**: a single process that
-may have introduced something, as opposed to years of risk built up by many
-authors. The review is aimed at what generation tends to leave behind. The
-steps are in `docs/EXERCISE.md`.
+**1. Provenance sets the review mode for the tool.** For example, this pipeline came out of one Claude Code generation session. The toolkit calls that case **Scenario B**: a single process that may have introduced something, as opposed to an existing repo which could potentially contain years of risk built up by multiple authors and commit history. The tool's review is aimed at what Claud e Code generation tends to leave behind. The actual steps are in `docs/EXERCISE.md`.
 
-**2. Shared CI.** `.github/workflows/security-scan.yml` is the toolkit's
-template, copied unmodified. It runs Gitleaks, Semgrep, Trivy, and a
-CycloneDX SBOM, with every action pinned by commit SHA and every scanner
-binary checksum-verified. Most of this repository's own actions are still
+**2. Shared CI.** `.github/workflows/security-scan.yml` lives in the toolkit's
+template and is copied unmodified to this repo. It runs Gitleaks, Semgrep, Trivy, and a CycloneDX SBOM, with every action pinned by commit SHA and every scanner binary checksum-verified. Most of this repository's own actions are still
 on version tags rather than commit SHAs. That falls short of the template's
-standard (see `docs/REVIEW_NOTES.md` 11). Update the template by re-copying
+standard, and is noted as such.  (see `docs/REVIEW_NOTES.md` 11). Update the template by re-copying
 it from the toolkit, never by editing it here.
 
 **3. A closed finding loop.** Toolkit output lands in `findings/`. Every
