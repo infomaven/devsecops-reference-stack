@@ -1,7 +1,13 @@
 # Security-audit: validate vulnerabilities of this pipeline using a home-grown tool 
 
-This reference pipeline is bundled with a simple node.JS service that runs against a PostGres backend. For better portability and low friction entry, the service was written using the same Claude Code session that created the pipeline infrastructure elements such as quality gates, security policies, tests
-and promotion controls.  
+This reference pipeline deploys a stand-in service: a stock
+`nginx-unprivileged` container, run under the chart's hardened defaults,
+alongside a Postgres database that Ansible configures. The stand-in receives
+the database settings but never connects; it is there so the pipeline has a
+workload to deploy, gate, and test. For portability and a low-friction start,
+everything in this repository (the Helm chart, the Terraform, the Ansible
+roles, the quality gates, security policies, tests, and promotion controls)
+was written in a single Claude Code session.
 
 From a security and quality standpoint, there is a chronic shortage of options and tools that can check the actual infrastructure code of the pipeline. To address this risk, I created a separate tool that developers or security engineers can use to evaluate the security posture of ANY code repo from GitHub. The tool is called `security-engineer-toolkit`. It is designed to scan repos using OWASP Top 10 Vulnerabilities and several other standard security frameworks as the basis for identifying issues. It also has capability to provide a sand-boxed environment that can be used to safely run unfamiliar code.
 
