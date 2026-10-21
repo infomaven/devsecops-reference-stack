@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 .terraform/
 *.tfstate
 *.tfstate.*
@@ -22,3 +23,16 @@ docs/DEMO_SCRIPT.md
 interview_prep-*.md
 walkthrough.sh
 .DS_Store
+=======
+# macOS Finder metadata
+.DS_Store
+
+# VS Code Local History extension backups
+.history/
+
+# Terraform working files and local state. The demo's local state holds the
+# database password in plaintext (docs/REVIEW_NOTES.md 4).
+.terraform/
+*.tfstate
+*.tfstate.*
+>>>>>>> e6c0619 (Add .gitignore; stop tracking .DS_Store files)
