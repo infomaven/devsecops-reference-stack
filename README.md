@@ -53,14 +53,32 @@ The hooks only run once `pre-commit` is installed and activated in your
 clone:
 
 ```bash
-brew install pre-commit tflint   # or: pipx install pre-commit, plus tflint from its releases page
+brew install pre-commit          # or: pipx install pre-commit
 pre-commit install               # activate the hooks for this clone
 pre-commit run --all-files       # optional: check the whole tree once
 ```
 
+The tflint hook also needs `tflint` on your PATH. Homebrew does not carry
+it, so install it from the project's GitHub releases and check the download
+against the published checksum first:
+
+```bash
+V=0.64.0                                              # pinned; update deliberately
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')           # darwin or linux
+ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+ZIP="tflint_${OS}_${ARCH}.zip"
+cd "$(mktemp -d)"
+curl -sSLO "https://github.com/terraform-linters/tflint/releases/download/v${V}/${ZIP}"
+curl -sSLO "https://github.com/terraform-linters/tflint/releases/download/v${V}/checksums.txt"
+grep " ${ZIP}\$" checksums.txt | shasum -a 256 -c -   # must print OK; stop if not
+unzip -q "$ZIP" && sudo install -m 0755 tflint /usr/local/bin/tflint
+tflint --version
+```
+
 The first run downloads each hook's own environment, so it takes a few
 minutes; later commits only check the files that changed. The Terraform
-hooks call the `terraform` and `tflint` on your PATH. `bootstrap.sh` does
+hooks call the `terraform` and `tflint` on your PATH. Without `tflint`, the
+tflint hook fails every commit that touches Terraform. `bootstrap.sh` does
 not check for `pre-commit` or `tflint`.
 
 ## The Pipeline at a Glance
