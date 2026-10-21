@@ -56,6 +56,34 @@ back if the test fails. Staging and prod also wait for a reviewer. Results,
 rollbacks, drift issues, and deployment records come back to the pull request
 and the issue tracker.
 
+### What differs between environments
+
+All three environments run the same `apply.yml` job; only the `environment`
+input changes. The table follows the diagram's phases. **Bold** marks a
+difference in behavior; the rest differ only by name.
+
+| Phase | Dev | Staging | Prod |
+|---|---|---|---|
+| Review: code owners of the Terraform root | platform-team | platform-team | **platform-team and security-team** |
+| Pull request checks: Terraform plan | `dev-plan` environment | `staging-plan` environment | `prod-plan` environment |
+| Pull request checks: policy gate | **single-replica warning** | passes clean | passes clean |
+| Promotion starts | **on merge to main** | after dev succeeds | after staging succeeds |
+| Approval before apply | **none** | **required reviewers** (set in GitHub, not in code) | **required reviewers** (set in GitHub, not in code) |
+| Decrypt secret | `secrets/dev.enc.yaml` | `secrets/staging.enc.yaml` | `secrets/prod.enc.yaml` |
+| Terraform apply: root and state | `terraform/envs/dev` | `terraform/envs/staging` | `terraform/envs/prod` |
+| Terraform apply: namespace | `paymentsvc-dev` | `paymentsvc-staging` | `paymentsvc-prod` |
+| Terraform apply: `owner` label | platform | platform | **payments** |
+| Workload: replicas | **1** | **2** | **3** |
+| Workload: pod disruption budget | **off** | **minAvailable 1** | **minAvailable 2** |
+| Workload: CPU and memory | chart defaults | chart defaults | **200m / 128Mi requested, 500m / 256Mi limit** |
+| Workload: log level | **debug** | **info** | **warn** |
+| Workload: `payments-v2` flag | on | on | **off** |
+| Workload: database | `paymentsvc_dev` | `paymentsvc_staging` | `paymentsvc_prod` |
+| Smoke test and rollback | same in all three | same in all three | same in all three |
+
+The values come from `helm/paymentsvc/values-<env>.yaml`,
+`terraform/envs/<env>/main.tf`, `.github/CODEOWNERS`, and the workflows.
+
 ## How to Run it
 
 ```bash
