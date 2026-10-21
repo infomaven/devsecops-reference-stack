@@ -32,7 +32,7 @@ stages of the audit's lifecycle, and each states plainly what it does not do:
 
 ## The self-audit, applied to this repository
 
-**1. Provenance sets the review mode for the tool.** For example, this pipeline came out of one Claude Code generation session. The toolkit calls that case **Scenario B**: a single process that may have introduced something, as opposed to an existing repo which could potentially contain years of risk built up by multiple authors and commit history. The tool's review is aimed at what Claude Code generation tends to leave behind. The actual steps are in `docs/EXERCISE.md`.
+**1. Provenance sets the review mode for the tool.** For example, this pipeline came out of one Claude Code generation session. The toolkit calls that case **Scenario B**: a single process that may have introduced something, as opposed to an existing repo which could potentially contain years of risk built up by multiple authors and commit history. The tool's review is aimed at what Claude Code generation tends to leave behind. The actual steps are in `docs/SECURITY_AUDIT_STEPS.md`.
 
 **2. Shared CI.** `.github/workflows/security-scan.yml` lives in the toolkit's
 template and is copied unmodified to this repo. It runs Gitleaks, Semgrep,

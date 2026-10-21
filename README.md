@@ -22,8 +22,8 @@ prod behind peer review, tests, and policy checks.
 | Monitoring and success criteria | `docs/MONITORING.md` |
 | Decisions and tradeoffs | `docs/adr/` |
 | Threat model | `docs/THREAT_MODEL.md` |
-| Auditing the stack with my own toolkit | `docs/EXERCISE.md`, `findings/` |
-| Self-audit: why a second repository checks this one | `docs/SECURITY_AUDIT.md` |
+| Auditing the stack with my own toolkit | `docs/SECURITY_AUDIT_STEPS.md`, `findings/` |
+| Self-audit: why a second repository checks this one | `docs/SECURITY_AUDIT_OVERVIEW.md` |
 | What I would fix next, and why | `docs/REVIEW_NOTES.md` |
 | The spec this repo answers to, and the prompts that rebuild it | `spec/` |
 
@@ -122,8 +122,8 @@ The division of labor is deliberate, and each repository states its own
 limits. The toolkit reviews code before it ships and says plainly that it does
 no dynamic testing, no release-integrity work, and nothing at runtime. This
 stack is the other half: the gates, the tests, the promotion controls, and the
-runtime posture. `docs/EXERCISE.md` is the step-by-step loop;
-`docs/SECURITY_AUDIT.md` is the one-page version of this argument.
+runtime posture. `docs/SECURITY_AUDIT_STEPS.md` is the step-by-step loop;
+`docs/SECURITY_AUDIT_OVERVIEW.md` is the one-page version of this argument.
 
 **Provenance.** I wrote this in October 2026 to have one place where the whole
 pipeline is visible end to end. The Terraform, CI/CD, SAST and policy-as-code

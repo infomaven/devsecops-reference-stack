@@ -17,7 +17,7 @@ read or change every database on the server.
 ## How it got here
 
 Deliberate tradeoff, half revisited. `docs/REVIEW_NOTES.md` and
-`docs/EXERCISE.md` accept the `bootstrap` password as a documented demo
+`docs/SECURITY_AUDIT_STEPS.md` accept the `bootstrap` password as a documented demo
 convenience. Neither mentions the bind address, which is Docker's default
 for a bare `-p` mapping.
 

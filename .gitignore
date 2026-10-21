@@ -16,8 +16,8 @@ __pycache__/
 # Interview preparation. Local only: these are personal notes about how to
 # present the work, not documentation of the stack, and a reviewer cloning
 # this repository has no reason to read them. Everything the repo needs to
-# stand on its own (README, EXERCISE, SECURITY_AUDIT, SECRETS, MONITORING,
-# THREAT_MODEL, K8S_FROM_SCRATCH, adr/) stays tracked.
+# stand on its own (README, SECURITY_AUDIT_STEPS, SECURITY_AUDIT_OVERVIEW,
+# SECRETS, MONITORING, THREAT_MODEL, K8S_FROM_SCRATCH, adr/) stays tracked.
 #
 # Already committed one of these? `git rm --cached <path>` once; ignoring
 # a tracked file does nothing on its own.

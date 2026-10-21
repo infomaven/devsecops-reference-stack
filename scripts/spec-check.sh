@@ -136,7 +136,7 @@ check F21 0 "" \
   'grepq "Spoofing" docs/THREAT_MODEL.md' 'has docs/MONITORING.md' 'has docs/K8S_FROM_SCRATCH.md'
 
 check F22 1 "no findings recorded yet" \
-  'has docs/EXERCISE.md' 'has docs/SECURITY_AUDIT.md' 'has findings/README.md' 'has findings/0000-template.md'
+  'has docs/SECURITY_AUDIT_STEPS.md' 'has docs/SECURITY_AUDIT_OVERVIEW.md' 'has findings/README.md' 'has findings/0000-template.md'
 
 check F23 0 "" \
   'has docs/REVIEW_NOTES.md' 'grepq "CONCURRENTLY" docs/REVIEW_NOTES.md'

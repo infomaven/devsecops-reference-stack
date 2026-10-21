@@ -2,7 +2,7 @@
 
 One file per finding, named `NNNN-short-slug.md`, oldest first. These are
 the output of exercising this repository with `security-engineer-toolkit`
-(see `docs/EXERCISE.md`), and they are deliberately in the repository
+(see `docs/SECURITY_AUDIT_STEPS.md`), and they are deliberately in the repository
 rather than in a scratch file: a finding that is not written down is a
 finding that comes back.
 

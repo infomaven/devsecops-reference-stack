@@ -64,7 +64,7 @@ exercise: ## run the security-engineer-toolkit loop against this repo
 	@echo "  /security-sweep ansible"
 	@echo "  /remediation-note <what you fixed>"
 	@echo
-	@echo "Record each finding in findings/. See docs/EXERCISE.md."
+	@echo "Record each finding in findings/. See docs/SECURITY_AUDIT_STEPS.md."
 
 spec-check: ## does the repository match spec/FEATURES.md
 	$(call RUN,bash scripts/spec-check.sh)
