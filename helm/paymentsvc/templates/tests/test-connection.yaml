@@ -4,12 +4,18 @@ kind: Pod
 metadata:
   name: "{{ include "paymentsvc.fullname" . }}-test"
   labels:
-    {{- include "paymentsvc.labels" . | nindent 4 }}
+    {{- include "paymentsvc.testLabels" . | nindent 4 }}
   annotations:
     helm.sh/hook: test
     helm.sh/hook-delete-policy: hook-succeeded
 spec:
   restartPolicy: Never
+  # No API access is needed to fetch one URL.
+  automountServiceAccountToken: false
+  # The namespace enforces the restricted Pod Security level, so the test pod
+  # carries the same hardening as the workload or it is not admitted.
+  securityContext:
+    {{- toYaml .Values.podSecurityContext | nindent 4 }}
   containers:
     - name: curl
       image: curlimages/curl:8.10.1
@@ -18,4 +24,18 @@ spec:
         - "--fail"
         - "--silent"
         - "--show-error"
+        - "--max-time"
+        - "10"
+        - "--retry"
+        - "5"
+        - "--retry-connrefused"
         - "http://{{ include "paymentsvc.fullname" . }}:{{ .Values.service.port }}{{ .Values.probes.readiness.path }}"
+      securityContext:
+        {{- toYaml .Values.containerSecurityContext | nindent 8 }}
+      resources:
+        requests:
+          cpu: 10m
+          memory: 16Mi
+        limits:
+          cpu: 100m
+          memory: 32Mi

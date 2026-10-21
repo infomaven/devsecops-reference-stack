@@ -24,6 +24,19 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
+The test pod must not carry the selector labels: with them the Service would
+route traffic to it and the workload's NetworkPolicy would apply to it.
+*/}}
+{{- define "paymentsvc.testLabels" -}}
+app.kubernetes.io/name: {{ printf "%s-test" (include "paymentsvc.name" .) }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/component: test
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/part-of: payments
+helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" }}
+{{- end -}}
+
+{{/*
 Guardrail: fail the render rather than ship a floating tag. The Rego policy
 catches this too, so a reviewer sees it fail in CI even if someone renders
 the chart with --set.

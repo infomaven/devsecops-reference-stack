@@ -146,7 +146,7 @@ check F24 0 "" \
   'has spec/prompts/00-spec-layer.md' 'has spec/prompts/MOD-template.md' \
   'has .claude/commands/spec-slice.md' 'has .claude/commands/spec-check.md'
 
-check F25 1 "CI builds and promotes only the image tag, not a selected profile (REVIEW_NOTES 9)" \
+check F26 1 "CI builds and promotes only the image tag, not a selected profile (REVIEW_NOTES 9)" \
   'has scripts/select-app.sh' 'has apps/README.md' 'grepq "^select-app:" Makefile' \
   'grepq "APP_TF_ARGS)" Makefile' 'grepq "APP_HELM_ARGS) | conftest" Makefile' \
   'grepq "variable \"app_values_file\"" terraform/modules/app/variables.tf' \
@@ -170,7 +170,8 @@ echo "invariants:"
 # Local reusable workflows (uses: ./...) sit in this repo at this commit and
 # need no pin. security-scan.yml is the toolkit's and is excluded by C5.
 AUTHORED_WORKFLOWS=".github/workflows/apply.yml .github/workflows/pr-checks.yml
-                    .github/workflows/promote.yml .github/workflows/scheduled-drift.yml"
+                    .github/workflows/promote.yml .github/workflows/scheduled-drift.yml
+                    .github/workflows/iac-vetting.yml"
 # shellcheck disable=SC2086
 i10_external=$(grep -hoE 'uses: +[^ ]+' $AUTHORED_WORKFLOWS 2>/dev/null \
   | grep -vE 'uses: +\./' | grep -c . || true)
@@ -211,6 +212,15 @@ done
 if [ -n "$untested" ]; then
   echo "  no mechanical test:$untested"
 fi
+
+check F25 1 "tflint warnings, Checkov and zizmor are report-only (REVIEW_NOTES 12)" \
+  'has .github/workflows/iac-vetting.yml' \
+  'grepq "terraform fmt -check" .github/workflows/iac-vetting.yml' \
+  'grepq "kubeconform -strict" .github/workflows/iac-vetting.yml' \
+  'grepq "compliance-threshold" .github/workflows/iac-vetting.yml' \
+  'grepq "actionlint" .github/workflows/iac-vetting.yml' \
+  '[ "$(grep -c "sha256sum --check --strict" .github/workflows/iac-vetting.yml)" -ge 6 ]' \
+  '! grepq "secrets\." .github/workflows/iac-vetting.yml'
 
 echo
 if command -v yamllint >/dev/null 2>&1; then

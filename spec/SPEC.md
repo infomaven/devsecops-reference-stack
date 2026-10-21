@@ -16,7 +16,7 @@ In scope:
 
 - One service, one chart, three environments (dev, staging, prod)
 - A selectable target application: the stand-in service by default, or a
-  real application chosen at spin-up with `make select-app` (F25)
+  real application chosen at spin-up with `make select-app` (F26)
 - One Postgres instance with per-environment databases
 - A local Kubernetes cluster (kind) and a local Postgres container
 - GitHub Actions workflows that would run against a real repository

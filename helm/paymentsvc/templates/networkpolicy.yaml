@@ -34,4 +34,37 @@ spec:
     - ports:
         - protocol: TCP
           port: {{ .Values.database.port }}
+---
+# The namespace is default-deny, so `helm test` needs its own narrow opening:
+# DNS, and the workload's pods on the service port. Nothing else.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "paymentsvc.fullname" . }}-test
+  labels:
+    {{- include "paymentsvc.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: test
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "paymentsvc.selectorLabels" . | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.service.port }}
 {{- end }}

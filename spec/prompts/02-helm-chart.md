@@ -11,7 +11,7 @@ value; it references `database.existingSecret` by name. Defaults are the
 restrictive case: runAsNonRoot with a fixed uid, seccomp RuntimeDefault,
 allowPrivilegeEscalation false, readOnlyRootFilesystem true with an emptyDir
 per entry in `writablePaths` (the stand-in lists /tmp and the nginx cache;
-an application profile from F25 lists its own), capabilities drop ALL, resource
+an application profile from F26 lists its own), capabilities drop ALL, resource
 requests and limits, liveness and readiness probes.
 
 Files: `Chart.yaml`; `values.yaml`; `values-dev.yaml`, `values-staging.yaml`,
