@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1840" height="900" viewBox="0 0 1840 900" role="img" aria-labelledby="title desc">
+<title id="title">devsecops-reference-stack delivery pipeline</title>
+<desc id="desc">A developer opens a pull request; CODEOWNERS review and automated checks (lint, security scans, policy, Terraform plans) gate the merge; promotion then applies dev, staging, and prod in order, each with a smoke test and rollback, staging and prod behind reviewer approval.</desc>
+<defs><marker id="head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#97a3b6"/></marker></defs>
+<rect width="1840" height="900" fill="#f1f4f9"/>
+<g transform="translate(170.0,95)"><circle cx="0" cy="-28" r="14" fill="#f6d2b8" stroke="#4b4b4b" stroke-width="2"/><path d="M-14 -34 q14 -16 28 0 q-4 -12 -14 -12 q-10 0 -14 12z" fill="#ff7a3d"/><path d="M-26 8 q0 -22 26 -22 q26 0 26 22z" fill="#c9ced8" stroke="#4b4b4b" stroke-width="2"/><rect x="-24" y="-6" width="48" height="30" rx="3" fill="#d8dbe2" stroke="#4b4b4b" stroke-width="2"/><circle cx="0" cy="9" r="4" fill="#ff7a3d"/><line x1="-42" y1="25" x2="42" y2="25" stroke="#4b4b4b" stroke-width="2.5"/></g>
+<g transform="translate(470.0,95)"><circle r="38" fill="#ff6633"/><text x="0" y="2" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="30" font-weight="bold" fill="#fff" text-anchor="middle" dominant-baseline="middle">&lt;/&gt;</text></g>
+<g transform="translate(770.0,95)"><path d="M0 -40 L32 -28 V0 C32 22 16 34 0 42 C-16 34 -32 22 -32 0 V-28 Z" fill="#b9a2f2" stroke="#743ee4" stroke-width="3"/><path d="M-14 0 L-3 12 L16 -12" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g transform="translate(1070.0,95)"><path d="M-30 14 L0 0 L30 14 L0 28 Z" fill="#7aa7ff" stroke="#3d5bd9" stroke-width="2"/><path d="M-30 14 V23 L0 37 V28 Z" fill="#4f74f0" stroke="#3d5bd9" stroke-width="2"/><path d="M30 14 V23 L0 37 V28 Z" fill="#3d5bd9" stroke="#3d5bd9" stroke-width="2"/><path d="M-30 -2 L0 -16 L30 -2 L0 12 Z" fill="#7aa7ff" stroke="#3d5bd9" stroke-width="2"/><path d="M-30 -2 V7 L0 21 V12 Z" fill="#4f74f0" stroke="#3d5bd9" stroke-width="2"/><path d="M30 -2 V7 L0 21 V12 Z" fill="#3d5bd9" stroke="#3d5bd9" stroke-width="2"/><path d="M-30 -18 L0 -32 L30 -18 L0 -4 Z" fill="#7aa7ff" stroke="#3d5bd9" stroke-width="2"/><path d="M-30 -18 V-9 L0 5 V-4 Z" fill="#4f74f0" stroke="#3d5bd9" stroke-width="2"/><path d="M30 -18 V-9 L0 5 V-4 Z" fill="#3d5bd9" stroke="#3d5bd9" stroke-width="2"/></g>
+<g transform="translate(1370.0,95)"><rect x="-24" y="-40" width="48" height="78" rx="4" fill="#fff" stroke="#138a72" stroke-width="3"/><rect x="-19" y="-6" width="38" height="39" fill="#e85570"/><circle cx="-8" cy="-18" r="6" fill="#e85570"/><circle cx="9" cy="-26" r="5" fill="#e85570"/><circle cx="6" cy="-14" r="3" fill="#e85570"/></g>
+<g transform="translate(1670.0,95) rotate(45)"><path d="M0 -44 C16 -28 16 8 12 22 H-12 C-16 8 -16 -28 0 -44 Z" fill="#e9ecf2" stroke="#4b4b4b" stroke-width="2"/><path d="M-12 6 L-26 24 L-12 22 Z M12 6 L26 24 L12 22 Z" fill="#e8322e"/><path d="M0 -44 C7 -37 10 -30 11 -24 H-11 C-10 -30 -7 -37 0 -44 Z" fill="#e8322e"/><circle cx="0" cy="-8" r="7" fill="#7fd6d0" stroke="#4b4b4b" stroke-width="2"/><path d="M-8 24 Q0 50 8 24 Z" fill="#ffb02e"/></g>
+<rect x="70" y="170" width="200" height="84" rx="12" fill="#fdeedd" stroke="#e77975" stroke-width="3"/>
+<text x="170.0" y="212.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="16" font-weight="bold" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="170.0" dy="0.0">Developer</tspan></text>
+<rect x="370" y="170" width="200" height="84" rx="12" fill="#fbf7c5" stroke="#f2c14b" stroke-width="3"/>
+<text x="470.0" y="212.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="16" font-weight="bold" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="470.0" dy="0.0">GitHub repository</tspan></text>
+<rect x="670" y="170" width="200" height="84" rx="12" fill="#f3d3ea" stroke="#743ee4" stroke-width="3"/>
+<text x="770.0" y="212.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="16" font-weight="bold" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="770.0" dy="0.0">Pull request checks</tspan></text>
+<rect x="970" y="170" width="200" height="84" rx="12" fill="#cbd0fb" stroke="#838cf1" stroke-width="3"/>
+<text x="1070.0" y="212.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="16" font-weight="bold" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="1070.0" dy="0.0">Dev environment</tspan></text>
+<rect x="1270" y="170" width="200" height="84" rx="12" fill="#fde4e7" stroke="#e14f62" stroke-width="3"/>
+<text x="1370.0" y="212.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="16" font-weight="bold" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="1370.0" dy="0.0">Staging environment</tspan></text>
+<rect x="1570" y="170" width="200" height="84" rx="12" fill="#e1f8e4" stroke="#5ec269" stroke-width="3"/>
+<text x="1670.0" y="212.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="16" font-weight="bold" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="1670.0" dy="0.0">Production</tspan></text>
+<path d="M 270.0 212.0 L 368.0 212.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="300.6" y="201.0" width="38.8" height="22" fill="#f1f4f9"/>
+<text x="320.0" y="212.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="320.0" dy="0.0">Pull</tspan></text>
+<text x="320.0" y="234.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="320.0" dy="0.0">request</tspan></text>
+<path d="M 570.0 212.0 L 668.0 212.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="589.8" y="201.0" width="60.4" height="22" fill="#f1f4f9"/>
+<text x="620.0" y="212.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="620.0" dy="0.0">Trigger</tspan></text>
+<text x="620.0" y="234.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="620.0" dy="0.0">checks</tspan></text>
+<path d="M 870.0 212.0 L 968.0 212.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="871.8" y="201.0" width="96.4" height="22" fill="#f1f4f9"/>
+<text x="920.0" y="212.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="920.0" dy="0.0">Checks pass,</tspan></text>
+<text x="920.0" y="234.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="920.0" dy="0.0">merge</tspan></text>
+<path d="M 1170.0 212.0 L 1268.0 212.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="1179.0" y="201.0" width="82.0" height="22" fill="#f1f4f9"/>
+<text x="1220.0" y="212.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="1220.0" dy="0.0">Smoke test</tspan></text>
+<text x="1220.0" y="234.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="1220.0" dy="0.0">passes</tspan></text>
+<path d="M 1470.0 212.0 L 1568.0 212.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="1486.2" y="201.0" width="67.6" height="22" fill="#f1f4f9"/>
+<text x="1520.0" y="212.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="1520.0" dy="0.0">Reviewer</tspan></text>
+<text x="1520.0" y="234.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="1520.0" dy="0.0">approves</tspan></text>
+<path d="M 170.0 254.0 L 170.0 298.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="70" y="300" width="200" height="84" rx="12" fill="#fdeedd" stroke="#e77975" stroke-width="3"/>
+<text x="170.0" y="332.6" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="170.0" dy="0.0">Choose the app</tspan><tspan x="170.0" dy="18.9">make select-app</tspan></text>
+<path d="M 170.0 384.0 L 170.0 412.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="70" y="414" width="200" height="84" rx="12" fill="#fdeedd" stroke="#e77975" stroke-width="3"/>
+<text x="170.0" y="446.6" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="170.0" dy="0.0">Run it locally</tspan><tspan x="170.0" dy="18.9">kind cluster, make deploy</tspan></text>
+<path d="M 470.0 254.0 L 470.0 298.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="370" y="300" width="200" height="84" rx="12" fill="#fbf7c5" stroke="#f2c14b" stroke-width="3"/>
+<text x="470.0" y="332.6" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="470.0" dy="0.0">CODEOWNERS review</tspan><tspan x="470.0" dy="18.9">platform, security, DBA</tspan></text>
+<path d="M 470.0 384.0 L 470.0 412.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="370" y="414" width="200" height="84" rx="12" fill="#fbf7c5" stroke="#f2c14b" stroke-width="3"/>
+<text x="470.0" y="446.6" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="470.0" dy="0.0">Merge to master</tspan><tspan x="470.0" dy="18.9">starts promotion</tspan></text>
+<path d="M 770.0 254.0 L 770.0 298.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="670" y="300" width="200" height="84" rx="12" fill="#f3d3ea" stroke="#743ee4" stroke-width="3"/>
+<text x="770.0" y="323.1" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="770.0" dy="0.0">Lint</tspan><tspan x="770.0" dy="18.9">terraform fmt, helm,</tspan><tspan x="770.0" dy="18.9">yamllint, ansible-lint</tspan></text>
+<path d="M 770.0 384.0 L 770.0 412.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="670" y="414" width="200" height="84" rx="12" fill="#f3d3ea" stroke="#743ee4" stroke-width="3"/>
+<text x="770.0" y="437.1" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="770.0" dy="0.0">Security scans</tspan><tspan x="770.0" dy="18.9">Gitleaks, Semgrep, Trivy,</tspan><tspan x="770.0" dy="18.9">Checkov, SBOM</tspan></text>
+<path d="M 770.0 498.0 L 770.0 526.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="670" y="528" width="200" height="84" rx="12" fill="#f3d3ea" stroke="#743ee4" stroke-width="3"/>
+<text x="770.0" y="551.1" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="770.0" dy="0.0">Policy gate</tspan><tspan x="770.0" dy="18.9">conftest on dev, staging,</tspan><tspan x="770.0" dy="18.9">and prod renders</tspan></text>
+<path d="M 770.0 612.0 L 770.0 640.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="670" y="642" width="200" height="84" rx="12" fill="#f3d3ea" stroke="#743ee4" stroke-width="3"/>
+<text x="770.0" y="674.5" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="770.0" dy="0.0">Terraform plan x3</tspan><tspan x="770.0" dy="18.9">plan policy, PR comment</tspan></text>
+<path d="M 1070.0 254.0 L 1070.0 298.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="970" y="300" width="200" height="84" rx="12" fill="#cbd0fb" stroke="#838cf1" stroke-width="3"/>
+<text x="1070.0" y="332.6" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="1070.0" dy="0.0">Decrypt secret</tspan><tspan x="1070.0" dy="18.9">SOPS + age</tspan></text>
+<path d="M 1070.0 384.0 L 1070.0 412.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="970" y="414" width="200" height="84" rx="12" fill="#cbd0fb" stroke="#838cf1" stroke-width="3"/>
+<text x="1070.0" y="437.1" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="1070.0" dy="0.0">Terraform apply</tspan><tspan x="1070.0" dy="18.9">namespace, default-deny,</tspan><tspan x="1070.0" dy="18.9">Helm release</tspan></text>
+<path d="M 1070.0 498.0 L 1070.0 526.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="970" y="528" width="200" height="84" rx="12" fill="#cbd0fb" stroke="#838cf1" stroke-width="3"/>
+<text x="1070.0" y="551.1" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="1070.0" dy="0.0">Smoke test</tspan><tspan x="1070.0" dy="18.9">rollout, helm test,</tspan><tspan x="1070.0" dy="18.9">security context</tspan></text>
+<path d="M 1070.0 612.0 L 1070.0 640.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="970" y="642" width="200" height="84" rx="12" fill="#cbd0fb" stroke="#838cf1" stroke-width="3"/>
+<text x="1070.0" y="674.5" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="1070.0" dy="0.0">If it fails: roll back</tspan><tspan x="1070.0" dy="18.9">helm rollback</tspan></text>
+<path d="M 1370.0 254.0 L 1370.0 298.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="1270" y="300" width="200" height="84" rx="12" fill="#fde4e7" stroke="#e14f62" stroke-width="3"/>
+<text x="1370.0" y="332.6" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="1370.0" dy="0.0">Reviewer approval</tspan><tspan x="1370.0" dy="18.9">GitHub environment</tspan></text>
+<path d="M 1370.0 384.0 L 1370.0 412.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="1270" y="414" width="200" height="84" rx="12" fill="#fde4e7" stroke="#e14f62" stroke-width="3"/>
+<text x="1370.0" y="437.1" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="1370.0" dy="0.0">Decrypt, apply,</tspan><tspan x="1370.0" dy="18.9">smoke test, roll back</tspan><tspan x="1370.0" dy="18.9">on failure</tspan></text>
+<path d="M 1670.0 254.0 L 1670.0 298.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="1570" y="300" width="200" height="84" rx="12" fill="#e1f8e4" stroke="#5ec269" stroke-width="3"/>
+<text x="1670.0" y="332.6" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="1670.0" dy="0.0">Reviewer approval</tspan><tspan x="1670.0" dy="18.9">GitHub environment</tspan></text>
+<path d="M 1670.0 384.0 L 1670.0 412.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="1570" y="414" width="200" height="84" rx="12" fill="#e1f8e4" stroke="#5ec269" stroke-width="3"/>
+<text x="1670.0" y="437.1" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="1670.0" dy="0.0">Decrypt, apply,</tspan><tspan x="1670.0" dy="18.9">smoke test, roll back</tspan><tspan x="1670.0" dy="18.9">on failure</tspan></text>
+<path d="M 1670.0 498.0 L 1670.0 526.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="1570" y="528" width="200" height="84" rx="12" fill="#e1f8e4" stroke="#5ec269" stroke-width="3"/>
+<text x="1670.0" y="570.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="1670.0" dy="0.0">Deployment record</tspan></text>
+<rect x="70" y="642" width="200" height="84" rx="12" fill="#f1f4f9" stroke="#20293a" stroke-width="3"/>
+<text x="170.0" y="665.1" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="170.0" dy="0.0">Postgres container</tspan><tspan x="170.0" dy="18.9">configured by Ansible:</tspan><tspan x="170.0" dy="18.9">roles, migrations, backups</tspan></text>
+<path d="M 170.0 498.0 L 170.0 640.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="139.8" y="559.0" width="60.4" height="22" fill="#f1f4f9"/>
+<text x="170.0" y="570.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="170.0" dy="0.0">make db</tspan></text>
+<rect x="370" y="528" width="200" height="84" rx="12" fill="#f1f4f9" stroke="#20293a" stroke-width="3"/>
+<text x="470.0" y="551.1" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="470.0" dy="0.0">Feedback</tspan><tspan x="470.0" dy="18.9">PR comments,</tspan><tspan x="470.0" dy="18.9">code scanning, issues</tspan></text>
+<path d="M 670.0 570.0 L 572.0 570.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<rect x="589.8" y="559.0" width="60.4" height="22" fill="#f1f4f9"/>
+<text x="620.0" y="570.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="620.0" dy="0.0">Results</tspan></text>
+<rect x="1270" y="642" width="200" height="84" rx="12" fill="#f1f4f9" stroke="#20293a" stroke-width="3"/>
+<text x="1370.0" y="674.5" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="1370.0" dy="0.0">Drift detection</tspan><tspan x="1370.0" dy="18.9">nightly plan, weekdays</tspan></text>
+<path d="M 1070.0 726.0 L 1070.0 800.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M 1370.0 726.0 L 1370.0 800.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M 1670.0 612.0 L 1670.0 788.0 L 1658.0 800.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M 1658.0 800.0 L 482.0 800.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M 482.0 800.0 L 470.0 788.0 L 470.0 614.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
+<text x="770.0" y="822.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="770.0" dy="0.0">Outcome: rollback, drift issue, deployment record</tspan></text>
+<text x="70" y="870.0" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#5b6475" text-anchor="start" dominant-baseline="middle"><tspan x="70" dy="0.0">devsecops-reference-stack  ·  workflows: pr-checks, security-scan, promote -&gt; apply (dev, staging, prod), drift-detection</tspan></text>
+</svg>

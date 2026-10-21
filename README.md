@@ -44,6 +44,18 @@ Docker, kind, kubectl, helm 3, terraform 1.6+, ansible-core 2.16+, sops, age,
 conftest, and `psycopg2-binary`. `scripts/bootstrap.sh` checks for each one
 and tells you what is missing.
 
+## The Pipeline at a Glance
+
+![Delivery pipeline: developer, GitHub review, pull request checks, then dev, staging, and production, each gated by a smoke test](docs/pipeline-diagram.svg)
+
+A pull request runs lint, security scans, the policy gate, and a Terraform
+plan for each environment, and needs CODEOWNERS approval to merge. The merge
+promotes the same commit to dev, staging, and prod in that order. Each
+environment decrypts its secret, applies, and runs the smoke test, and rolls
+back if the test fails. Staging and prod also wait for a reviewer. Results,
+rollbacks, drift issues, and deployment records come back to the pull request
+and the issue tracker.
+
 ## How to Run it
 
 ```bash
