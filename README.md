@@ -27,11 +27,6 @@ prod behind peer review, tests, and policy checks.
 | What I would fix next, and why | `docs/REVIEW_NOTES.md` |
 | The spec this repo answers to, and the prompts that rebuild it | `spec/` |
 
-Three files under `docs/` are gitignored because they are interview
-preparation rather than documentation: `ELEVATOR_PITCH.md`,
-`INTERVIEW_NOTES.md`, and `DEMO_SCRIPT.md`. They stay on the machine that
-wrote them.
-
 ## Design Approach: Spec-driven
 
 The capabilities of this repo were created using a set of spec files that were created from a Product owner perspective and the following directive: This repo should provide a solid DevSecOps foundation for a pipeline that can vet applications early in the development process. 
