@@ -41,3 +41,4 @@ produces or modifies the feature. Status: done, partial, or planned.
 | F15a | Roll back through Terraform (previous image tag) so state and cluster agree | F15 partial | MOD |
 | F16a | Dedupe drift issues by label | F16 partial | MOD |
 | F04a | Pin NetworkPolicy egress to the database destination by ipBlock | F04 | MOD |
+| F19a | `requirements.txt` pins ansible-core, ansible-lint, yamllint, and psycopg2-binary; `make venv` creates `.venv/` from it and installs the collections in `ansible/requirements.yml`; Makefile targets that run Python tools use `.venv/bin/` so activation is not required; `bootstrap.sh` names `make venv` when ansible-playbook or psycopg2 is missing; `.venv/` is gitignored | F19 | MOD |

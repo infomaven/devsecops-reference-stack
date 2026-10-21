@@ -101,6 +101,12 @@ policy, and smoke test. What that leaves open:
 - `Makefile` sleeps five seconds after starting Postgres instead of waiting
   for readiness. The Ansible `pre_tasks` ping covers it, but the Makefile
   should not depend on that.
+- The Python tools (ansible-core, ansible-lint, yamllint, psycopg2) are
+  whatever the operator has installed into their system Python, unpinned.
+  `bootstrap.sh` checks they exist, not which version, and nothing installs
+  the linters `make lint` needs. Planned as F19a: a pinned `requirements.txt`
+  and a project venv. The other tools are native binaries and stay on the
+  host.
 - `pr-checks.yml` pins `CHECKOV_VERSION` to a placeholder. It needs a verified
   release before it runs.
 - `helm test` proves the service answers, not that it is correct.

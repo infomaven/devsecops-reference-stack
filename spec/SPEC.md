@@ -36,8 +36,10 @@ Out of scope, by decision:
 
 ## Constraints
 
-- C1. Runs on a laptop with Docker, kind, kubectl, helm, terraform,
-  ansible-core, conftest, and nothing cloud-side.
+- C1. Runs on a laptop with Docker, kind, kubectl, helm, terraform, sops,
+  age, conftest, and nothing cloud-side. The Python tooling (ansible-core,
+  its linters, and psycopg2) installs into a project virtual environment at
+  versions pinned in the repository, not into the system Python (F19a).
 - C2. No real secret is ever committed. Placeholders are labeled as such.
 - C3. Every claim about security posture is enforced by code, not by
   convention: a template guard, a policy rule, or a test.
