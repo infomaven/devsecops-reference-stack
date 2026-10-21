@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 .terraform/
 *.tfstate
 *.tfstate.*
@@ -8,11 +7,16 @@
 *.decrypted.yaml
 age.key
 __pycache__/
+.venv/
+
+# macOS Finder metadata and VS Code Local History extension backups
+.DS_Store
+.history/
 
 # Interview preparation. Local only: these are personal notes about how to
 # present the work, not documentation of the stack, and a reviewer cloning
 # this repository has no reason to read them. Everything the repo needs to
-# stand on its own (README, EXERCISE, TWO_REPOS, SECRETS, MONITORING,
+# stand on its own (README, EXERCISE, SECURITY_AUDIT, SECRETS, MONITORING,
 # THREAT_MODEL, K8S_FROM_SCRATCH, adr/) stays tracked.
 #
 # Already committed one of these? `git rm --cached <path>` once; ignoring
@@ -22,17 +26,3 @@ docs/INTERVIEW_NOTES.md
 docs/DEMO_SCRIPT.md
 interview_prep-*.md
 walkthrough.sh
-.DS_Store
-=======
-# macOS Finder metadata
-.DS_Store
-
-# VS Code Local History extension backups
-.history/
-
-# Terraform working files and local state. The demo's local state holds the
-# database password in plaintext (docs/REVIEW_NOTES.md 4).
-.terraform/
-*.tfstate
-*.tfstate.*
->>>>>>> e6c0619 (Add .gitignore; stop tracking .DS_Store files)
