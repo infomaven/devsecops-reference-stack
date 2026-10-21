@@ -144,7 +144,9 @@ check F23 0 "" \
 check F24 0 "" \
   'has spec/SPEC.md' 'has spec/FEATURES.md' 'has spec/CHANGE-PROTOCOL.md' \
   'has spec/prompts/00-spec-layer.md' 'has spec/prompts/MOD-template.md' \
-  'has .claude/commands/spec-slice.md' 'has .claude/commands/spec-check.md'
+  'has .claude/commands/spec-slice.md' 'has .claude/commands/spec-check.md' \
+  'has scripts/spec-owner.sh' 'grepq "spec-owner.sh --hook" .claude/settings.json' \
+  'bash scripts/spec-owner.sh --all >/dev/null'
 
 check F26 1 "CI builds and promotes only the image tag, not a selected profile (REVIEW_NOTES 9)" \
   'has scripts/select-app.sh' 'has apps/README.md' 'grepq "^select-app:" Makefile' \
@@ -205,6 +207,15 @@ if [ -z "$i13_bad" ]; then
   report PASS I13 "$i13_count application profile(s) leave the security context to the chart"
 else
   report FAIL I13 "profile overrides a security switch or floats its tag: $i13_bad"
+fi
+
+# File ownership: every tracked file outside spec/ is listed in some feature
+# row's Files column (CHANGE-PROTOCOL, "Before editing any file"). F24 fails
+# above if not; this lists which files.
+unowned_files=$(bash scripts/spec-owner.sh --all)
+if [ -n "$unowned_files" ]; then
+  echo "  files with no owning feature row:"
+  echo "$unowned_files" | sed 's/^/    /'
 fi
 
 # Coverage: an invariant with no mechanical test is a comment. Reported rather
