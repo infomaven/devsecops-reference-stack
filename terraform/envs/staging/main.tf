@@ -39,18 +39,25 @@ variable "db_password" {
 }
 
 variable "image_tag" {
-  description = "Set by CI to the tag built from the merge commit."
+  description = "Set by CI to the tag built from the merge commit. Null keeps the tag in the chart values or app profile."
   type        = string
-  default     = "1.27.2-alpine"
+  default     = null
+}
+
+variable "app_values_file" {
+  description = "Application profile from apps/, set by make from apps/.selected. Empty deploys the stand-in."
+  type        = string
+  default     = ""
 }
 
 module "app" {
   source = "../../modules/app"
 
-  environment = "staging"
-  namespace   = "paymentsvc-staging"
-  image_tag   = var.image_tag
-  db_password = var.db_password
+  environment     = "staging"
+  namespace       = "paymentsvc-staging"
+  image_tag       = var.image_tag
+  app_values_file = var.app_values_file
+  db_password     = var.db_password
 
   labels = {
     "app.kubernetes.io/part-of" = "payments"

@@ -1,6 +1,10 @@
 ---
 # Defaults. Every environment file overrides only what differs, so a reviewer
 # can see the delta between dev, staging, and prod in a few lines.
+#
+# The image, port, probes, and writablePaths below describe the stand-in
+# service. A real application replaces them with a profile from apps/,
+# written by scripts/select-app.sh and layered after the environment file.
 replicaCount: 1
 
 image:
@@ -36,6 +40,12 @@ containerSecurityContext:
   readOnlyRootFilesystem: true
   capabilities:
     drop: ["ALL"]
+
+# Directories the application writes to. Each gets its own emptyDir, because
+# the root filesystem is read-only. These two are what nginx needs.
+writablePaths:
+  - /tmp
+  - /var/cache/nginx
 
 probes:
   liveness:

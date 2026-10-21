@@ -1,0 +1,20 @@
+---
+# Application profile: podinfo. Written by scripts/select-app.sh on
+# 2026-10-19. Layered after values-<env>.yaml. Sets only what differs
+# about the application; the security context stays the chart's (I13).
+image:
+  repository: ghcr.io/stefanprodan/podinfo
+  tag: "6.7.1"
+service:
+  port: 9898
+podSecurityContext:
+  runAsUser: 10001
+  fsGroup: 10001
+probes:
+  liveness:
+    path: /healthz
+  readiness:
+    path: /healthz
+writablePaths:
+  - /tmp
+  - /data

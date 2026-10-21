@@ -14,12 +14,24 @@ variable "namespace" {
 }
 
 variable "image_tag" {
-  description = "Explicit image tag. Floating tags are rejected."
+  description = "Explicit image tag, or null to keep the tag in the chart values or app profile. Floating tags are rejected."
   type        = string
+  default     = null
 
   validation {
-    condition     = var.image_tag != "latest" && length(var.image_tag) > 0
+    condition     = var.image_tag == null ? true : (var.image_tag != "latest" && length(var.image_tag) > 0)
     error_message = "image_tag must be an explicit version, not latest."
+  }
+}
+
+variable "app_values_file" {
+  description = "Absolute path to an application profile from apps/, layered after the environment values. Empty deploys the stand-in."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.app_values_file == "" || endswith(var.app_values_file, ".yaml")
+    error_message = "app_values_file must be empty or a .yaml application profile."
   }
 }
 

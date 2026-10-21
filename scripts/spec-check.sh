@@ -146,6 +146,15 @@ check F24 0 "" \
   'has spec/prompts/00-spec-layer.md' 'has spec/prompts/MOD-template.md' \
   'has .claude/commands/spec-slice.md' 'has .claude/commands/spec-check.md'
 
+check F25 1 "CI builds and promotes only the image tag, not a selected profile (REVIEW_NOTES 9)" \
+  'has scripts/select-app.sh' 'has apps/README.md' 'grepq "^select-app:" Makefile' \
+  'grepq "APP_TF_ARGS)" Makefile' 'grepq "APP_HELM_ARGS) | conftest" Makefile' \
+  'grepq "variable \"app_values_file\"" terraform/modules/app/variables.tf' \
+  'grepq "dynamic \"set\"" terraform/modules/app/main.tf' \
+  'grepq "range \$i, \$path := .Values.writablePaths" helm/paymentsvc/templates/deployment.yaml' \
+  'grepq "probes.readiness.path" helm/paymentsvc/templates/tests/test-connection.yaml' \
+  'grepq "explicit tag, not latest" scripts/select-app.sh'
+
 
 # ---------------------------------------------------------------------------
 # Invariants. SPEC.md states twelve; the ones that can be tested by a command
@@ -178,6 +187,18 @@ else
     "$i10_unpinned of $i10_external external action refs on mutable tags (REVIEW_NOTES 11)"
   grep -nE 'uses: +[^ .]' $AUTHORED_WORKFLOWS 2>/dev/null \
     | grep -vE '@[0-9a-f]{40}' | sed 's/^/             /'
+fi
+
+# tested-invariant: I13
+# An application profile sets what differs about the application and never
+# the security switches of I2, and never a floating or empty tag (I1).
+i13_bad=$(grep -lE 'runAsNonRoot|allowPrivilegeEscalation|readOnlyRootFilesystem|capabilities|privileged|containerSecurityContext|tag: *"?(latest)?"? *$' \
+  apps/*.yaml 2>/dev/null | tr '\n' ' ')
+i13_count=$(ls apps/*.yaml 2>/dev/null | wc -l | tr -d ' ')
+if [ -z "$i13_bad" ]; then
+  report PASS I13 "$i13_count application profile(s) leave the security context to the chart"
+else
+  report FAIL I13 "profile overrides a security switch or floats its tag: $i13_bad"
 fi
 
 # Coverage: an invariant with no mechanical test is a comment. Reported rather

@@ -71,13 +71,30 @@ implementation is not there. Against a real account, the apply job needs the
 environment. After a week that is five issues about the same thing. Dedupe by
 label: search for an open issue first and comment on it instead.
 
-## 9. The placeholder service is a placeholder
+## 9. The placeholder service is a placeholder, unless one is selected
 
-The chart deploys `nginx-unprivileged` and calls it `paymentsvc`. The
-`DB_*` environment variables are set and nothing reads them. The security
-context, probes, and policy are real; the application is not. A small real
-service that actually opens a database connection would make the smoke test
-mean more.
+By default the chart deploys `nginx-unprivileged` and calls it `paymentsvc`.
+The `DB_*` environment variables are set and nothing reads them. The
+security context, probes, and policy are real; the application is not.
+
+`make select-app` (F25) now points the local pipeline at a real application
+through a profile in `apps/`, and holds it to the same policy, network
+policy, and smoke test. What that leaves open:
+
+- CI does not know about profiles. The workflows pass `image_tag` only, so a
+  merge promotes the stand-in's image with a new tag; a profile has to be
+  committed and passed as `app_values_file` in `apply.yml` before CI deploys
+  the selected application. The `.github/` workflows are not in this working
+  tree, so that change waits for them.
+- `--source` runs `docker build` on whatever directory it is given, on the
+  operator's machine, outside the toolkit's sandbox. Build untrusted code in
+  the sandbox first.
+- The contract a real application must meet (non-root numeric UID, port
+  1024 and up, listed writable paths, `DB_*` names, egress to DNS and the
+  database only) is enforced at render and at run time, but a mismatch shows
+  up as a failed rollout, not as a message saying which rule it broke.
+- Object names stay `paymentsvc` whatever runs, so the smoke test does not
+  change; the cost is that `kubectl get` does not say which application it is.
 
 ## 10. Smaller things
 

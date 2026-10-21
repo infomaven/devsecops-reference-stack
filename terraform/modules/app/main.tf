@@ -6,8 +6,8 @@ resource "kubernetes_namespace" "this" {
   metadata {
     name = var.namespace
     labels = merge(var.labels, {
-      "environment"                  = var.environment
-      "kubernetes.io/metadata.name"  = var.namespace
+      "environment"                        = var.environment
+      "kubernetes.io/metadata.name"        = var.namespace
       "pod-security.kubernetes.io/enforce" = "restricted"
     })
   }
@@ -50,13 +50,21 @@ resource "helm_release" "app" {
   chart     = "${path.module}/../../../helm/paymentsvc"
   namespace = kubernetes_namespace.this.metadata[0].name
 
-  values = [
-    file("${path.module}/../../../helm/paymentsvc/values-${var.environment}.yaml"),
-  ]
+  # Environment deltas first, then the selected application profile, so the
+  # profile decides what runs and the environment decides how much of it.
+  values = concat(
+    [file("${path.module}/../../../helm/paymentsvc/values-${var.environment}.yaml")],
+    var.app_values_file == "" ? [] : [file(var.app_values_file)],
+  )
 
-  set {
-    name  = "image.tag"
-    value = var.image_tag
+  # CI sets the tag it built. Left unset, the tag comes from the stand-in
+  # defaults or the selected profile.
+  dynamic "set" {
+    for_each = var.image_tag == null ? [] : [var.image_tag]
+    content {
+      name  = "image.tag"
+      value = set.value
+    }
   }
 
   # Fail the apply rather than leave a half-rolled deployment behind.

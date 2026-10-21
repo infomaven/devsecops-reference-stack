@@ -56,16 +56,17 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
             # readOnlyRootFilesystem is on, so anything that writes needs an
-            # explicit, bounded volume.
-            - name: tmp
-              mountPath: /tmp
-            - name: nginx-cache
-              mountPath: /var/cache/nginx
+            # explicit, bounded volume. The list is per application, so a
+            # selected application profile (apps/) declares its own.
+            {{- range $i, $path := .Values.writablePaths }}
+            - name: writable-{{ $i }}
+              mountPath: {{ $path }}
+            {{- end }}
       volumes:
-        - name: tmp
+        {{- range $i, $path := .Values.writablePaths }}
+        - name: writable-{{ $i }}
           emptyDir: {}
-        - name: nginx-cache
-          emptyDir: {}
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

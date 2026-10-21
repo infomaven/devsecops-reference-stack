@@ -9,8 +9,9 @@ Implement F02, F03, F04 under `helm/paymentsvc/`.
 Constraints from SPEC: invariants I1, I2, I3. The chart never holds a secret
 value; it references `database.existingSecret` by name. Defaults are the
 restrictive case: runAsNonRoot with a fixed uid, seccomp RuntimeDefault,
-allowPrivilegeEscalation false, readOnlyRootFilesystem true with emptyDir
-volumes for /tmp and the nginx cache, capabilities drop ALL, resource
+allowPrivilegeEscalation false, readOnlyRootFilesystem true with an emptyDir
+per entry in `writablePaths` (the stand-in lists /tmp and the nginx cache;
+an application profile from F25 lists its own), capabilities drop ALL, resource
 requests and limits, liveness and readiness probes.
 
 Files: `Chart.yaml`; `values.yaml`; `values-dev.yaml`, `values-staging.yaml`,

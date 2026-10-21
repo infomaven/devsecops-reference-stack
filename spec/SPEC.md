@@ -15,6 +15,8 @@ This project was created to provide a template for learning secure CI/CD princip
 In scope:
 
 - One service, one chart, three environments (dev, staging, prod)
+- A selectable target application: the stand-in service by default, or a
+  real application chosen at spin-up with `make select-app` (F25)
 - One Postgres instance with per-environment databases
 - A local Kubernetes cluster (kind) and a local Postgres container
 - GitHub Actions workflows that would run against a real repository
@@ -24,7 +26,10 @@ In scope:
 Out of scope, by decision:
 
 - Any cloud account, cost, or cloud credential
-- A real application; the service is a stand-in
+- Building, testing, or owning a real application's code. A selected
+  application arrives as a container image (pulled, or built from a local
+  Dockerfile) and is held to the same gates as the stand-in; the stand-in
+  remains the default when nothing is selected
 - Multi-cluster, multi-region, or multi-tenant concerns
 - Observability tooling deployed in-cluster; monitoring is specified, not run
 - Dynamic application security testing
@@ -64,15 +69,23 @@ that can be tested mechanically.
 - I10. Every action in a workflow this repository authors is pinned by
   commit SHA, not tag; the vendored template already is.
 - I11. `yamllint -s .` passes; `conftest` passes on every environment's
-  rendered chart.
+  rendered chart, with the selected application profile layered on top when
+  one is selected.
 - I12. Every decision that would be expensive to reverse has an ADR.
+- I13. An application profile in `apps/` sets only what differs about the
+  application (image, port, probe path, writable paths, user ID). It never
+  sets the security context switches of I2, and the selection script refuses
+  a floating or empty tag (I1).
 
 ## Architecture, in one paragraph
 
 Terraform owns the namespace-level posture (namespace, labels, default-deny
 network policy, the database secret) and invokes the Helm chart as a
 `helm_release`. The chart owns the workload: Deployment, Service, ConfigMap,
-NetworkPolicy egress rules, PodDisruptionBudget, and a test hook. Ansible
+NetworkPolicy egress rules, PodDisruptionBudget, and a test hook. What the
+workload runs is the stand-in unless an application profile in `apps/` is
+selected; Terraform layers that profile after the environment's values file,
+so the chart, the policy, and the smoke test do not change. Ansible
 owns the database as a running service: settings, roles, grants, extensions,
 migrations, backups. GitHub Actions owns the order of operations: lint,
 scan, policy, plan on pull request; apply dev, then staging, then prod on

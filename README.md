@@ -13,6 +13,7 @@ prod behind peer review, tests, and policy checks.
 |---|---|
 | Kubernetes from scratch | `kind/cluster.yaml`, `docs/K8S_FROM_SCRATCH.md` |
 | Helm chart authoring | `helm/paymentsvc/` |
+| Deploying a real application instead of the stand-in | `apps/`, `scripts/select-app.sh` |
 | Terraform, three environments | `terraform/envs/`, `terraform/modules/app/` |
 | Ansible with Postgres | `ansible/`, `db/migrations/` |
 | Secrets management | `docs/SECRETS.md`, `.sops.yaml`, `scripts/` |
@@ -53,6 +54,7 @@ and tells you what is missing.
 ```bash
 ./scripts/bootstrap.sh          # preflight checks
 make cluster                    # kind cluster + registry-less local images
+make select-app                 # optional: a real application instead of the stand-in
 make db                         # Postgres container + Ansible roles + migrations
 make deploy ENV=dev             # terraform apply against the kind cluster
 make smoke ENV=dev              # post-deploy checks
@@ -62,6 +64,18 @@ make destroy                    # tear everything down
 
 Each `make` target prints the underlying command before running it, so a
 screenshare viewer can see exactly what is happening.
+
+### Choosing the application
+
+The pipeline deploys a stand-in service (`nginx-unprivileged`) unless you
+select a real one. `make select-app` asks for a published image
+(`repository:tag`) or a local directory with a Dockerfile, then the port,
+health path, and writable directories, and writes a profile to `apps/`. It
+policy-checks all three environments with the profile before selecting it;
+`make plan`, `deploy`, `policy`, and `destroy` use it from then on.
+`make select-app ARGS=--standin` goes back. What a real application has to
+accept to pass the same gates is in `apps/README.md`; `apps/podinfo.yaml` is
+a worked example.
 
 ## Bonus: Audited with my own tooling
 

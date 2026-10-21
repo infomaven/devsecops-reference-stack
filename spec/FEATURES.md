@@ -30,6 +30,7 @@ produces or modifies the feature. Status: done, partial, or planned.
 | F22 | Audit loop | EXERCISE.md loop, findings directory with template, `make exercise`, SECURITY_AUDIT.md | `docs/EXERCISE.md`, `findings/*`, `docs/SECURITY_AUDIT.md` | P11 | partial: no findings recorded yet |
 | F23 | Review notes | Known weaknesses in priority order with reasons | `docs/REVIEW_NOTES.md` | P12 | done |
 | F24 | Spec layer | SPEC, FEATURES, prompts, change protocol, conformance script, Claude Code commands | `spec/*`, `scripts/spec-check.sh`, `.claude/commands/*` | P00 | done |
+| F25 | Target application selection | `scripts/select-app.sh` writes `apps/<name>.yaml` from an image reference or a local Dockerfile, refuses a floating or empty tag and a port below 1024, and records the choice in `apps/.selected`; `--standin` clears it; profiles never set I2's security switches (I13); `make plan`, `deploy`, and `policy` layer the selected profile after the environment values; the Terraform module takes `app_values_file` and applies `image_tag` only when set; the chart's writable volumes and test-hook path come from values | `scripts/select-app.sh`, `apps/*`, `Makefile`, `helm/paymentsvc/values.yaml`, `helm/paymentsvc/templates/deployment.yaml`, `helm/paymentsvc/templates/tests/test-connection.yaml`, `terraform/modules/app/*`, `terraform/envs/*/main.tf` | MOD | partial: CI builds and promotes only the image tag, not a selected profile (REVIEW_NOTES 9) |
 
 ## Planned changes, from REVIEW_NOTES
 
