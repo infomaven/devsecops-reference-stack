@@ -7,7 +7,7 @@ name: promote
 # the next environment starts.
 on:
   push:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 permissions:
