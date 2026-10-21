@@ -44,6 +44,25 @@ Docker, kind, kubectl, helm 3, terraform 1.6+, ansible-core 2.16+, sops, age,
 conftest, and `psycopg2-binary`. `scripts/bootstrap.sh` checks for each one
 and tells you what is missing.
 
+### Pre-commit hooks
+
+`.pre-commit-config.yaml` runs Gitleaks, `terraform fmt`, `terraform
+validate`, tflint, `yamllint -s`, and ansible-lint on every commit, so a
+leaked secret or a lint failure is caught before it reaches a pull request.
+The hooks only run once `pre-commit` is installed and activated in your
+clone:
+
+```bash
+brew install pre-commit tflint   # or: pipx install pre-commit, plus tflint from its releases page
+pre-commit install               # activate the hooks for this clone
+pre-commit run --all-files       # optional: check the whole tree once
+```
+
+The first run downloads each hook's own environment, so it takes a few
+minutes; later commits only check the files that changed. The Terraform
+hooks call the `terraform` and `tflint` on your PATH. `bootstrap.sh` does
+not check for `pre-commit` or `tflint`.
+
 ## The Pipeline at a Glance
 
 ![Delivery pipeline: developer, GitHub review, pull request checks, then dev, staging, and production, each gated by a smoke test](docs/pipeline-diagram.svg)
