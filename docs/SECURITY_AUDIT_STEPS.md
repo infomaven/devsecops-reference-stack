@@ -1,113 +1,67 @@
-# Exercising this stack with the security-engineer-toolkit
+# Security audit: steps
 
-This repository is a Claude Code generated application. That is not an
-aside; it is exactly the case `security-engineer-toolkit` calls **Scenario
-B**, and it is the honest way to demonstrate both repos at once: one built
-the thing, the other audits it, and the audit is the part most people skip.
+How to audit this repository with `security-engineer-toolkit`. Why a second
+repository does the audit, and what each one covers, is in
+`SECURITY_AUDIT_OVERVIEW.md`.
 
-## Why the two fit together
+## Before you start
 
-The one-page version, for opening on a screenshare, is `SECURITY_AUDIT_OVERVIEW.md`.
+- Install the toolkit's slash commands in Claude Code.
+- Optionally install the local scanners `make exercise` uses: Gitleaks,
+  Semgrep, Trivy, and Checkov. Any that are missing are skipped.
+- Audit only code you own or are authorized to review. The toolkit is static
+  and reasoning-based: its output is a code review, not a penetration test
+  or dynamic testing.
 
-The toolkit's own `FRAMEWORK-ALIGNMENT.md` states its boundaries plainly.
-Those boundaries are where this repository lives.
+## Steps
 
-| Toolkit says | This repository |
-|---|---|
-| SSDF PW.8, dynamic testing: **none** | `helm test`, `scripts/smoke-test.sh`, promotion gated on a live check |
-| SSDF PS, release integrity: **none** | Promotion by merge, environment reviewers, deployment record, rollback |
-| SAMM Operations: **none**, entirely pre-production | Kubernetes posture, network policy, monitoring, drift detection |
-| SAMM Design, security architecture: **none** | `docs/THREAT_MODEL.md`, the ADRs, policy as code in `policy/` |
-| Verification / PW.7 code review: **core** | Not attempted here. The toolkit does it |
+**1. Run the local scanners.** From the repository root:
 
-One sentence for the interview: *the toolkit verifies code, this stack
-covers the design and operations half the toolkit says it does not, and I
-run them against each other.*
+```bash
+make exercise      # runs the installed scanners, then prints the commands for steps 2 to 5
+```
 
-## The loop
-
-**1. Intake.** In Claude Code, from this repository:
+**2. Intake.** In Claude Code, from the repository root:
 
 ```
 /setup-target .
 ```
 
-Answer its questions honestly: stack is Terraform, Helm, Ansible, and
-shell; risk profile is a local demo with no real data; authorization is
-your own code; effort budget is a few hours.
+Answer its questions: the stack is Terraform, Helm, Ansible, and shell; the
+risk profile is a local demo with no real data; authorization is your own
+code; the effort budget is a few hours.
 
-**2. Scenario B review, on the generation itself.** This repo was produced
-in one session, so it is one large diff from nothing:
+**3. Review the generated code (Scenario B).** This repository was produced
+in one Claude Code session, so it is reviewed as one large diff from nothing:
 
 ```
 /security-review
 ```
 
-Then read `AI-AGENT-THREAT-MODEL.md` and check specifically for what
+Then read the toolkit's `AI-AGENT-THREAT-MODEL.md` and check for what
 generation tends to leave behind: plausible-looking example credentials,
 hardcoded connection strings, overly permissive defaults. The three
-placeholder age keys in `.sops.yaml` and the `POSTGRES_PASSWORD=bootstrap`
-in the Makefile are deliberate and documented; anything else it finds is a
-real finding.
+placeholder age keys in `.sops.yaml` and `POSTGRES_PASSWORD=bootstrap` in the
+Makefile are deliberate and documented. Anything else is a real finding.
 
-**3. Sweep what is actually code.** The shell scripts and the Ansible
-Jinja templating are the executable surface:
+**4. Sweep the executable code.** The shell scripts and the Ansible Jinja
+templating are the code that runs:
 
 ```
 /security-sweep scripts
 /security-sweep ansible
 ```
 
-**4. Record findings.** One file per finding in `findings/`, using the
-template there. `/remediation-note` writes the "why it happens" and "the
-guardrail, not just the fix" sections for you.
+**5. Record each finding.** Write one file per finding in `findings/`, using
+`findings/0000-template.md`. `/remediation-note` drafts the "why it
+happens" and "the guardrail, not just the fix" sections.
 
-**5. Close the loop.** Every finding either becomes a fix, a Rego rule in
-`policy/`, or a row in `docs/THREAT_MODEL.md` under known weaknesses. A
-finding that becomes a policy rule is the strongest outcome, because it
-cannot regress silently.
+**6. Close each finding** in one of three ways:
 
-```bash
-make exercise      # prints this loop and runs whatever local scanners you have
-```
+- fix the code;
+- add a Rego rule in `policy/` that fails the build if the problem comes
+  back; or
+- record it as an accepted risk in `docs/THREAT_MODEL.md` under known
+  weaknesses.
 
-## CI
-
-`.github/workflows/security-scan.yml` is the toolkit's template, copied
-unmodified: Gitleaks, Semgrep, Trivy, and a CycloneDX SBOM, with every
-action pinned by commit SHA and every scanner binary checksum-verified.
-Update it by re-copying from the toolkit rather than editing it here.
-
-`pr-checks.yml` keeps only what that template does not cover: the
-infrastructure scanners, the Rego policy gate, and the Terraform plans.
-
-## Optional: run a vulnerable application through the hardened chart
-
-The toolkit ships WebGoat as a practice target. Deploying it through this
-chart is a useful demonstration precisely because **it fails**:
-
-```bash
-helm template webgoat helm/paymentsvc \
-  --set image.repository=webgoat/webgoat \
-  --set image.tag=2026.1 \
-  | conftest test --policy policy/kubernetes -
-```
-
-WebGoat needs a writable root filesystem and will not run under the
-chart's defaults. The policy says no, and the only way forward is an
-explicit waiver in a values file that a reviewer has to approve. That is
-the whole argument for policy as code in one screen: the guardrail held
-against a workload that genuinely wanted to break it, and the exception is
-a visible, reviewable artifact rather than a quiet edit.
-
-Do not deploy WebGoat to anything but the local kind cluster.
-
-## What to say, and what not to
-
-Say that the stack was generated and then audited with your own toolkit,
-and that you enabled the review path before trusting the output. Say that
-the toolkit is static and reasoning-based, so it is not dynamic testing
-and not a DAST substitute.
-
-Do not describe toolkit output as a penetration test, and do not point any
-of this at infrastructure you do not own.
+A policy rule is the strongest outcome, because it cannot regress silently.
