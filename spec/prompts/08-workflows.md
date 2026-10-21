@@ -18,7 +18,7 @@ except pull-requests: write for the comment.
 `apply.yml` as `workflow_call` with an `environment` input: checkout,
 terraform setup, decrypt the environment's SOPS file into `GITHUB_ENV`,
 apply with the image tag from the commit SHA, smoke test, `helm rollback` on
-failure, deployment record. `promote.yml` on push to master: dev, then staging
+failure, deployment record. `promote.yml` on push to main: dev, then staging
 needing dev, then prod needing staging, each calling `apply.yml`.
 `scheduled-drift.yml`: weekday schedule, `plan -detailed-exitcode` per
 environment, open an issue on drift.

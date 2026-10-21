@@ -4,7 +4,7 @@ Scope: the pipeline and the deployed service, not the application logic.
 
 | Threat | Where it bites | What this repo does |
 |---|---|---|
-| Spoofing | A workflow from a fork runs with repository credentials | `pull_request` jobs get read-only tokens; applies run only from `master`, behind GitHub environments with required reviewers |
+| Spoofing | A workflow from a fork runs with repository credentials | `pull_request` jobs get read-only tokens; applies run only from `main`, behind GitHub environments with required reviewers |
 | Tampering | Someone edits prod directly, or lands an unreviewed change | CODEOWNERS on `terraform/envs/prod` and `policy/`; nightly drift plan opens an issue on any out-of-band change |
 | Repudiation | "Nobody knows who changed prod" | Every apply is a merge commit; `apply.yml` records env, sha, and result; ADRs hold the reasoning |
 | Information disclosure | Secrets in git, state, logs, or a rendered manifest | SOPS per environment, `sensitive` Terraform variables, `no_log` in Ansible, Rego rule against inline password env vars, gitleaks in two places |

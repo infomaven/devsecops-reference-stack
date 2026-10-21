@@ -52,7 +52,7 @@
 <text x="470.0" y="332.6" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="470.0" dy="0.0">CODEOWNERS review</tspan><tspan x="470.0" dy="18.9">platform, security, DBA</tspan></text>
 <path d="M 470.0 384.0 L 470.0 412.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
 <rect x="370" y="414" width="200" height="84" rx="12" fill="#fbf7c5" stroke="#f2c14b" stroke-width="3"/>
-<text x="470.0" y="446.6" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="470.0" dy="0.0">Merge to master</tspan><tspan x="470.0" dy="18.9">starts promotion</tspan></text>
+<text x="470.0" y="446.6" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="470.0" dy="0.0">Merge to main</tspan><tspan x="470.0" dy="18.9">starts promotion</tspan></text>
 <path d="M 770.0 254.0 L 770.0 298.0" fill="none" stroke="#97a3b6" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#head)"/>
 <rect x="670" y="300" width="200" height="84" rx="12" fill="#f3d3ea" stroke="#743ee4" stroke-width="3"/>
 <text x="770.0" y="323.1" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#20293a" text-anchor="middle" dominant-baseline="middle"><tspan x="770.0" dy="0.0">Lint</tspan><tspan x="770.0" dy="18.9">terraform fmt, helm,</tspan><tspan x="770.0" dy="18.9">yamllint, ansible-lint</tspan></text>
