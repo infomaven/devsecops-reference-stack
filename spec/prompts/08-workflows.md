@@ -14,6 +14,10 @@ pinned version, installed by pipx, no `@master` action tags); `policy`
 three environments, needing the others, running validate, plan to a file,
 plan-JSON policy, and a plan comment on the pull request. Read-only token
 except pull-requests: write for the comment.
+`.github/CODEOWNERS`: platform-team owns everything; prod's Terraform root,
+`policy/`, `secrets/`, and the workflows also need security-team; `ansible/`
+also needs dba-team. `.github/pull_request_template.md`: what changes, which
+environments, plan review, rollback, and a checks list.
 
 `apply.yml` as `workflow_call` with an `environment` input: checkout,
 terraform setup, decrypt the environment's SOPS file into `GITHUB_ENV`,

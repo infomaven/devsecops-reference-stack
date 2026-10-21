@@ -11,9 +11,10 @@ This applies to every tracked file: source code, configuration, workflows,
 scripts, and documentation, including Markdown and diagrams. The prompts in
 `prompts/` produce all of them, so every one of them answers to the spec.
 
-1. Find the owner. Look the file up in the Files column of `FEATURES.md`,
-   in the Features table and the Planned changes table. The row's Prompt
-   column names the prompt that produces it: a numbered prompt, or MOD.
+1. Find the owner. Look the file up in the Files column of the Features
+   table in `FEATURES.md`. The row's Prompt column names the prompt that
+   produces it: a numbered prompt, or MOD. A planned change is owned through
+   the feature in its Replaces column.
 2. If a row owns the file and the change stays inside that row's acceptance
    criteria, make the change under that feature, using `/spec-slice <ID>` or
    the prompt the row names.

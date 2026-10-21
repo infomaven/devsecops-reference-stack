@@ -155,6 +155,11 @@ check F26 1 "CI builds and promotes only the image tag, not a selected profile (
   'grepq "probes.readiness.path" helm/paymentsvc/templates/tests/test-connection.yaml' \
   'grepq "explicit tag, not latest" scripts/select-app.sh'
 
+check F27 0 "" \
+  'has README.md' 'has LICENSE' 'has docs/pipeline-diagram.svg' \
+  'grepq "docs/pipeline-diagram.svg" README.md' \
+  'grepq "pre-commit install" README.md'
+
 
 # ---------------------------------------------------------------------------
 # Invariants. SPEC.md states twelve; the ones that can be tested by a command

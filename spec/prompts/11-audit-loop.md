@@ -15,7 +15,9 @@ the loop: `make exercise`, `/setup-target .`, `/security-review`,
 fix, policy rule, or accepted risk. No rationale; it links to the overview.
 `docs/SECURITY_AUDIT_OVERVIEW.md`: the one-page self-audit argument.
 `findings/README.md` and `findings/0000-template.md`. `make exercise`
-runs local scanners and prints the Claude Code commands.
+runs local scanners and prints the Claude Code commands. `TARGET-CONTEXT.md`
+at the repository root is the intake record that `/setup-target` writes;
+commit it so later toolkit commands read it instead of asking again.
 
 Acceptance:
 - `make exercise` runs without error when no scanners are installed (each
